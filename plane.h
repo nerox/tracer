@@ -7,7 +7,7 @@
 #include <iostream>
 #include <stdlib.h>     /* abs */
 #include <list>
-#define EPSILON2 0.0001
+
 class plane: public shape
 {
 	public:

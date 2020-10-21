@@ -3,6 +3,9 @@
 #include "tuple.h"
 #include "ray.h"
 #include "sphere.h"
+#include "cube.h"
+#include "cylinder.h"
+#include "cone.h"
 #include "plane.h"
 #include "light.h"
 #include "world.h"
@@ -12,6 +15,18 @@
 #define EPSILON 0.0001
 #define REMAIN 2
 world sceneWorld;
+
+double schlick(double cos, const double n1, const double n2, const double sin2_t ){
+	if (n1 > n2){
+		if (sin2_t>1.0){
+			return 1.0;
+		}
+		double cos_t = sqrt(1.0-sin2_t);
+		cos=cos_t;
+	}
+	double r_0= pow(((n1-n2)/(n1+n2)),2);
+	return r_0+(1-r_0)*pow((1-cos),5);
+}
 tuple color(const ray& r, int remain,std::list<shape*> *containers);
 tuple lighting(const material& input_material, const light& input_light, const tuple& point,
 				const tuple& eyev, const tuple& normalv, const bool isShadow, const double transparency){
@@ -216,6 +231,7 @@ tuple color(const ray& r, int remain,std::list<shape*> *containers){
 		double nratio=n1/n2;
 		double cos_i=dot(eyev,normalv);
 		double sin2_t=pow(nratio,2)*(1-pow(cos_i,2));
+
 		/*End Comps*/
 		/*Shade Hit function*/
 		bool isShadow=isPointShadow(over_point,5);
@@ -227,7 +243,13 @@ tuple color(const ray& r, int remain,std::list<shape*> *containers){
 		tuple refractedColor=refractedworld(under_point, normalv,eyev,nearHitPointMaterial.transparency,
 											nratio,sin2_t,cos_i, remain,containers);
 		tuple reflectedColor=reflectedworld( nearHitPointMaterial.reflective, reflectv, over_point,remain, containers);
-		return color+refractedColor+reflectedColor;
+		if(nearHitPointMaterial.reflective>0 && nearHitPointMaterial.transparency>0){
+			double reflectance = schlick(cos_i, n1, n2,sin2_t);
+			return color+refractedColor*(1-reflectance)+reflectedColor*reflectance;
+		}
+		else{
+			return color+refractedColor+reflectedColor;	
+		}
 
 	}
 	return tuple(0.0,0.0,0.0,1.0);
@@ -267,10 +289,10 @@ int main(){
 	std::cout << "P3\n" << canvasPixelsx << " "<< canvasPixelsy << "\n255\n";
 	//CREATE camera
 	// with fieldview of pi/2
-	camera worldCamera(canvasPixelsx,canvasPixelsy,M_PI/2);
-	tuple from(0,3,-5,1);
+	camera worldCamera(canvasPixelsx,canvasPixelsy,M_PI/3);
+	tuple from(-10,1,-15,1);
 	tuple to (0,0,0,1);
-	tuple up(0,5,0,1);
+	tuple up(0,10,0,1);
 	worldCamera.setViewTransform(from,to,up);
 	//Set light
 	sceneWorld.sourceLight= light(tuple(-10,10.0,-10,1.0),tuple(1,1,1,1));
@@ -301,13 +323,20 @@ int main(){
 						   scale(tuple(0.5,0.5,0.5,1));*/
 	right.set_material(tuple(0.5,1,0.1,1),0.1,0.7,0.3,200.0,0.0,0,0);
 
-	sphere left= sphere(tuple(0,0,0,0),1);
+	//sphere left= sphere(tuple(0,0,0,0),1);
 	/*left.shapeTransform=translation(tuple(-2.5,0.33,0.5,1))*
 	scale(tuple(0.33,0.33,0.33,1));*/
-	left.shapeTransform=translation(tuple(-1.5,1.5,0.75,1))*
+	/*left.shapeTransform=translation(tuple(-1.5,1.5,0.75,1))*
+						   scale(tuple(0.33,1,0.33,1));
+	left.set_material(tuple(1,0.8,0.1,1),0.2,0.7,0.3,400.0,0.0,0,0);*/
+
+	cone left= cone(tuple(0,0,0,0),3,4,true);
+	/*left.shapeTransform=translation(tuple(-2.5,0.33,0.5,1))*
+	scale(tuple(0.33,0.33,0.33,1));*/
+	left.shapeTransform=translation(tuple(-1.5,0,0.75,1))*
+							rotatex(-M_PI/2)*
 						   scale(tuple(0.33,1,0.33,1));
 	left.set_material(tuple(1,0.8,0.1,1),0.2,0.7,0.3,400.0,0.0,0,0);
-
 	//sphere S2(tuple(0,0,0,0),0.5);
 	
 	/*	
@@ -319,7 +348,7 @@ int main(){
 		shininess=sh;
 	*/
 	///S2.set_material(tuple(1,0.2,1,1),0.1,0.9,0.9,200.0);
-	sceneWorld.addObject(&floor);
+	//sceneWorld.addObject(&floor);
 	sceneWorld.addObject(&leftWall);
 	sceneWorld.addObject(&rightWall);
 	//sceneWorld.addObject(&middle);

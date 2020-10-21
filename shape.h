@@ -6,6 +6,7 @@
 #include "ray.h"
 #include <iostream>
 #include <list>
+#define EPSILON2 0.0001
 
 class shape
 {

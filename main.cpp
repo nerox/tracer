@@ -15,7 +15,17 @@
 #define EPSILON 0.0001
 #define REMAIN 2
 #define OBJECTS_TOTAL 3
+#define X_DIM 1920
+#define Y_DIM 1080
 world sceneWorld;
+
+struct Thread_Positions
+{
+     int xpos;
+     int ypos;
+
+};
+
 
 double schlick(double cos, const double n1, const double n2, const double sin2_t ){
 	if (n1 > n2){
@@ -259,11 +269,13 @@ tuple color(const ray& r, int remain,std::list<shape*> *containers){
 	return tuple(0.0,0.0,0.0,1.0);
 }
 void renderWorld(const camera& worldCamera){
-	int j,i;
+	int j,i,k;
 	//worldCamera.vsize
 	//worldCamera.hsize
-	for (j=0;j<worldCamera.vsize;j++){
-		for(i=0;i <worldCamera.hsize;i++){
+	i=0;
+	j=0;
+	for (k=0;k<worldCamera.vsize*worldCamera.hsize;k++){
+		if(i<worldCamera.hsize){
 			ray r= rayforPixel(worldCamera, i, j);
 			std::list<shape*> containers;
 			tuple col = color(r,REMAIN, &containers);
@@ -271,6 +283,11 @@ void renderWorld(const camera& worldCamera){
 			int ig = int(255.99*col.g()); 
 			int ib = int(255.99*col.b()); 
 			std::cout << ir << " " << ig << " " << ib << "\n";
+			i++;
+		}
+		else{
+			j++;
+			i=0;
 		}
 	}
 }
@@ -287,13 +304,11 @@ void ray_at_pixel(const camera& worldCamera,int i,int j){
 
 }
 int main(){
-	double canvasPixelsx=1920;
-	double canvasPixelsy=1080;
 	//set coordinates and dimensions of the canvas
-	std::cout << "P3\n" << canvasPixelsx << " "<< canvasPixelsy << "\n255\n";
+	std::cout << "P3\n" << X_DIM << " "<< Y_DIM << "\n255\n";
 	//CREATE camera
 	// with fieldview of pi/2
-	camera worldCamera(canvasPixelsx,canvasPixelsy,M_PI/3);
+	camera worldCamera(X_DIM,Y_DIM,M_PI/3);
 	tuple from(-10,1,-15,1);
 	tuple to (0,0,0,1);
 	tuple up(0,10,0,1);

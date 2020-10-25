@@ -28,8 +28,7 @@ class cone: public shape
 		maximum=max;
 		closed=cl;
 	}
-	std::list<double> ray_hits_me(const ray& r){
-		std::list<double> localHitList;
+	double ray_hits_me(const ray& r, double near_hit_point){
 		matrix inv=invertMatrix(this->shapeTransform);
 		tuple transformRayOrigin=r.origin()*inv;
 		tuple transformRayDestination=r.direction()*inv;
@@ -40,20 +39,20 @@ class cone: public shape
 		double c= pow(transformRayOrigin.x(),2)+pow(transformRayOrigin.z(),2)-pow(transformRayOrigin.y(),2);
 		if (abs(a)<=0){ 
 			if (abs(b)<=0){
-				return intersect_caps(transformRayOrigin,transformRayDestination,localHitList);
+				return intersect_caps(transformRayOrigin,transformRayDestination,near_hit_point);
 			}	
 			else{
 				double t= -c/(2*b);	
 				double y0= transformRayOrigin.y()+t*transformRayDestination.y();
-				if(minimum<y0 && y0<maximum && t>=0){
-					localHitList.push_back(t);
+				if(minimum<y0 && y0<maximum && t>=0 && t<near_hit_point){
+					near_hit_point=t;
 				}		
 			}	
 		}
 		else{
 			double disc= pow(b,2)-4*a*c;
 			if (disc<0){
-				return localHitList;
+				return near_hit_point;
 			}
 			double t0= (-b-sqrt(disc))/(2*a);
 			double t1= (-b+sqrt(disc))/(2*a);
@@ -61,16 +60,16 @@ class cone: public shape
 				std::swap(t0,t1);
 			}
 			double y0= transformRayOrigin.y()+t0*transformRayDestination.y();
-			if(minimum<y0 && y0<maximum && t0>=0){
-				localHitList.push_back(t0);
+			if(minimum<y0 && y0<maximum && t0>=0 && t0<near_hit_point){
+				near_hit_point=t0;
 			}
 			double y1= transformRayOrigin.y()+t1*transformRayDestination.y();
-			if(minimum<y1 && y1<maximum && t1>=0){
-				localHitList.push_back(t1);
+			if(minimum<y1 && y1<maximum && t1>=0 && t1<near_hit_point){
+				near_hit_point=t1;
 			}
 
 		}
-		return intersect_caps(transformRayOrigin,transformRayDestination,localHitList);
+		return intersect_caps(transformRayOrigin,transformRayDestination,near_hit_point);
 	};
 	tuple normal_at(tuple point){
 		matrix inv = invertMatrix(this->shapeTransform);
@@ -101,20 +100,20 @@ class cone: public shape
 		double z = origin.z()+t*direction.z();
 		return (pow(x,2)+pow(z,2))<= pow(y,2);
 	}
-	std::list<double> intersect_caps(const tuple& origin, const tuple& direction,std::list<double>& localHitList){
+	double intersect_caps(const tuple& origin, const tuple& direction,double near_hit_point){
 		if(closed==false || abs(direction.y())<EPSILON2){
-			return localHitList;
+			return near_hit_point;
 		}
 		double t0=(minimum-origin.y())/direction.y();
 		//std::cout << t0<<" t3 \n";
-		if(check_cap(origin,direction,t0,minimum) && t0>=0){
-			localHitList.push_back(t0);
+		if(check_cap(origin,direction,t0,minimum) && t0>=0 && t0<near_hit_point){
+			near_hit_point=t0;
 		}
 		double t1=(maximum-origin.y())/direction.y();
-		if(check_cap(origin,direction,t1,maximum) && t1>=0){
-			localHitList.push_back(t1);
+		if(check_cap(origin,direction,t1,maximum) && t1>=0 && t1<near_hit_point){
+			near_hit_point=t1;
 		}
-		return localHitList;		
+		return near_hit_point;		
 	}
 	double minimum;
 	double maximum;

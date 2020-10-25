@@ -28,21 +28,20 @@ class cylinder: public shape
 		maximum=max;
 		closed=cl;
 	}
-	std::list<double> ray_hits_me(const ray& r){
-		std::list<double> localHitList;
+	double ray_hits_me(const ray& r, double near_hit_point){
 		matrix inv=invertMatrix(this->shapeTransform);
 		tuple transformRayOrigin=r.origin()*inv;
 		tuple transformRayDestination=r.direction()*inv;
 		double a= pow(transformRayDestination.x(),2)+pow(transformRayDestination.z(),2);
 		if (abs(a)<=0){ 
-			return intersect_caps(transformRayOrigin,transformRayDestination,localHitList);
+			return intersect_caps(transformRayOrigin,transformRayDestination,near_hit_point);
 		}
 		double b= 2*transformRayOrigin.x()*transformRayDestination.x()+
 				  2*transformRayOrigin.z()*transformRayDestination.z();
 		double c= pow(transformRayOrigin.x(),2)+pow(transformRayOrigin.z(),2)-1;
 		double disc= pow(b,2)-4*a*c;
 		if (disc<0){
-			return localHitList;
+			return near_hit_point;
 		}
 		double t0= (-b-sqrt(disc))/(2*a);
 		double t1= (-b+sqrt(disc))/(2*a);
@@ -50,14 +49,14 @@ class cylinder: public shape
 			std::swap(t0,t1);
 		}
 		double y0= transformRayOrigin.y()+t0*transformRayDestination.y();
-		if(minimum<y0 && y0<maximum && t0>=0){
-			localHitList.push_back(t0);
+		if(minimum<y0 && y0<maximum && t0>=0 && near_hit_point>t0){
+			near_hit_point=t0;
 		}
 		double y1= transformRayOrigin.y()+t1*transformRayDestination.y();
-		if(minimum<y1 && y1<maximum && t1>=0){
-			localHitList.push_back(t1);
+		if(minimum<y1 && y1<maximum && t1>=0 && near_hit_point>t1){
+			near_hit_point=t1;
 		}
-		return intersect_caps(transformRayOrigin,transformRayDestination,localHitList);
+		return intersect_caps(transformRayOrigin,transformRayDestination,near_hit_point);
 	};
 	tuple normal_at(tuple point){
 		matrix inv = invertMatrix(this->shapeTransform);
@@ -84,19 +83,19 @@ class cylinder: public shape
 		double z = origin.z()+t*direction.z();
 		return (pow(x,2)+pow(z,2))<= 1;
 	}
-	std::list<double> intersect_caps(const tuple& origin, const tuple& direction,std::list<double>& localHitList){
+	double intersect_caps(const tuple& origin, const tuple& direction,double near_hit_point){
 		if(closed==false || abs(direction.y())<EPSILON2){
-			return localHitList;
+			return near_hit_point;
 		}
 		double t0=(minimum-origin.y())/direction.y();
-		if(check_cap(origin,direction,t0) && t0>=0){
-			localHitList.push_back(t0);
+		if(check_cap(origin,direction,t0) && t0>=0 && near_hit_point> t0){
+			near_hit_point=t0;
 		}
 		double t1=(maximum-origin.y())/direction.y();
-		if(check_cap(origin,direction,t1) && t1>=0){
-			localHitList.push_back(t1);
+		if(check_cap(origin,direction,t1) && t1>=0 && near_hit_point> t1){
+			near_hit_point=t1;
 		}
-		return localHitList;		
+		return near_hit_point;		
 	}
 	double minimum;
 	double maximum;

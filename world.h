@@ -13,21 +13,18 @@
 class world {
 public:
 	world(){}
-	std::list<shape*> objectsInWorld;//TODO add other data types 
-	void addObject(shape* newObject);
+	shape** objectsInWorld;//TODO add other data types 
+	void addObject(shape* newObject, int position);
 	void setViewTransform(const tuple& from, const tuple& to, const tuple& up);
-	int getWorldSize();
+	void createWorldList(int TotalObjects);
 	bool isPointShadow(const tuple inputPoint);
 	light sourceLight;
-
 };
-
-void world::addObject(shape* newObject){
-	objectsInWorld.push_back (newObject);
+void world::createWorldList(int TotalObjects){
+	objectsInWorld = (shape**)malloc(TotalObjects*sizeof(shape*));
 }
-
-int world::getWorldSize(){
-	return objectsInWorld.size();
+void world::addObject(shape* newObject, int position){
+	objectsInWorld[position]= newObject;
 }
 
 #endif 

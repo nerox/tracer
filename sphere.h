@@ -13,8 +13,7 @@ class sphere: public shape
 									radius=r;
 									shapeTransform.setIdentity();
 									}
-	std::list<double> ray_hits_me(const ray& r){
-		std::list<double> localHitList;
+	double ray_hits_me(const ray& r, double near_hit_point){
 		matrix inv=invertMatrix(this->shapeTransform);
 		tuple transformRayOrigin=r.origin()*inv;
 		tuple transformRayDestination=r.direction()*inv;
@@ -28,14 +27,14 @@ class sphere: public shape
 		//std::cout << t1 << "esfera \n";
 		//std::cout << t2 << "esfera \n";
 		if(discriminant >0){
-				if(t1>=0){
-					localHitList.push_back(t1);
+				if(t1>=0 && near_hit_point>t1){
+					near_hit_point=t1;
 				}
-				if(t2>=0){
-					localHitList.push_back(t2);
+				if(t2>=0 && near_hit_point>t2){
+					near_hit_point=t2;
 				}
 			}
-		return localHitList;
+		return near_hit_point;
 	};
 	tuple normal_at(tuple point){
 		matrix inv = invertMatrix(this->shapeTransform);

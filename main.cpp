@@ -14,6 +14,7 @@
 #include "camera.h"
 #define EPSILON 0.0001
 #define REMAIN 2
+#define OBJECTS_TOTAL 3
 world sceneWorld;
 
 double schlick(double cos, const double n1, const double n2, const double sin2_t ){
@@ -146,20 +147,22 @@ bool isPointShadow(const tuple inputPoint, const int remain){
 	double distance = v.length();
 	tuple direction = unit_vector(v);
 	ray r(inputPoint,direction);
-	hitList pointHitList;
-	std::list<shape*>::iterator it;
+	int it;
 	//TODO REMOVE REPLICATED CODE
-	for (it = sceneWorld.objectsInWorld.begin(); it != sceneWorld.objectsInWorld.end(); ++it){
-		std::list<double> result_hit=(*it)->ray_hits_me(r);
-		std::list<double>::iterator localit;
-		for (localit = result_hit.begin(); localit != result_hit.end(); ++localit){
-			pointHitList.addHit( *localit,(*it)->shapeMaterial,*it);
-		} 
+	double nearHitPoint = std::numeric_limits<double>::max(); //set to infinity
+	double returnedHitPoint;
+	int objectPoistion;
+	for (it = 0; it <OBJECTS_TOTAL; it++){
+
+		returnedHitPoint=(sceneWorld.objectsInWorld[it])->ray_hits_me(r,nearHitPoint);
+		if(returnedHitPoint<nearHitPoint){
+			objectPoistion=it;
+			nearHitPoint=returnedHitPoint;
+		}
+		
 	}
-	if(pointHitList.gethitListSize()>0){
-		pointHitList.hitListSort();
-		double nearHitPoint= pointHitList.localHitList.begin()->hitPoint;
-		material nearHitPointMaterial= pointHitList.localHitList.begin()->hitObjectMaterial;
+	if(nearHitPoint!=std::numeric_limits<double>::max()){
+		material nearHitPointMaterial= (sceneWorld.objectsInWorld[objectPoistion])->shapeMaterial;
 		tuple position=r.point_at_parameter(nearHitPoint);
 		tuple rdir=r.direction();
 		tuple over_point= position+(rdir*EPSILON);
@@ -187,26 +190,27 @@ bool isPointShadow(const tuple inputPoint, const int remain){
 }
 //TODO THIS SHOULD BE A WORLD FUNCTION
 tuple color(const ray& r, int remain,std::list<shape*> *containers){
-	std::list<shape*>::iterator it;
-	hitList pointHitList;
+	int it;
+	//TODO REMOVE REPLICATED CODE
+	double nearHitPoint = std::numeric_limits<double>::max(); //set to infinity
+	double returnedHitPoint;
 
-	for (it = sceneWorld.objectsInWorld.begin(); it != sceneWorld.objectsInWorld.end(); ++it){
-		std::list<double> result_hit=(*it)->ray_hits_me(r);
-		std::list<double>::iterator localit;
-		for (localit = result_hit.begin(); localit != result_hit.end(); ++localit){
-			pointHitList.addHit( *localit,(*it)->shapeMaterial,*it);
-		} 
+	int objectPoistion;
+	for (it = 0; it <OBJECTS_TOTAL; it++){
+
+		returnedHitPoint=(sceneWorld.objectsInWorld[it])->ray_hits_me(r,nearHitPoint);
+		if(returnedHitPoint<nearHitPoint){
+			objectPoistion=it;
+			nearHitPoint=returnedHitPoint;
+		}
+		
 	}
-	if(pointHitList.gethitListSize()>0){
-		/*Start  Comps 3046*/
-		pointHitList.hitListSort();
-		double nearHitPoint= pointHitList.localHitList.begin()->hitPoint;
-		material nearHitPointMaterial= pointHitList.localHitList.begin()->hitObjectMaterial;
-		shape* objectShape = pointHitList.localHitList.begin()->shapeAdress;
-		tuple rdir=r.direction();
+	if(nearHitPoint!=std::numeric_limits<double>::max()){
+		material nearHitPointMaterial= (sceneWorld.objectsInWorld[objectPoistion])->shapeMaterial;
 		tuple position=r.point_at_parameter(nearHitPoint);
+		tuple rdir=r.direction();
 		//Define surface normal
-		tuple normalv=objectShape->normal_at(position);
+		tuple normalv=(sceneWorld.objectsInWorld[objectPoistion])->normal_at(position);
 		//In case normal points away from eye vector
 		tuple eyev;
 		eyev=negate_tuple(rdir);
@@ -227,7 +231,7 @@ tuple color(const ray& r, int remain,std::list<shape*> *containers){
 		tuple under_point= position-(normalv*EPSILON);
 		double n1;
 		double n2;
-		setRefractiveIndexes(containers, &n1, &n2, objectShape);
+		setRefractiveIndexes(containers, &n1, &n2, (sceneWorld.objectsInWorld[objectPoistion]));
 		double nratio=n1/n2;
 		double cos_i=dot(eyev,normalv);
 		double sin2_t=pow(nratio,2)*(1-pow(cos_i,2));
@@ -296,7 +300,7 @@ int main(){
 	worldCamera.setViewTransform(from,to,up);
 	//Set light
 	sceneWorld.sourceLight= light(tuple(-10,10.0,-10,1.0),tuple(1,1,1,1));
-
+	sceneWorld.createWorldList(OBJECTS_TOTAL);
 	//TODO create a general way of creating the scene for testing
 	plane floor= plane(tuple(0,0,0,0));
 	floor.shapeTransform=translation(tuple(0,0,0,1));
@@ -330,7 +334,7 @@ int main(){
 						   scale(tuple(0.33,1,0.33,1));
 	left.set_material(tuple(1,0.8,0.1,1),0.2,0.7,0.3,400.0,0.0,0,0);*/
 
-	cone left= cone(tuple(0,0,0,0),3,4,true);
+	sphere left= sphere(tuple(0,0,0,0),3);
 	/*left.shapeTransform=translation(tuple(-2.5,0.33,0.5,1))*
 	scale(tuple(0.33,0.33,0.33,1));*/
 	left.shapeTransform=translation(tuple(-1.5,0,0.75,1))*
@@ -349,10 +353,11 @@ int main(){
 	*/
 	///S2.set_material(tuple(1,0.2,1,1),0.1,0.9,0.9,200.0);
 	//sceneWorld.addObject(&floor);
-	sceneWorld.addObject(&leftWall);
-	sceneWorld.addObject(&rightWall);
+	sceneWorld.addObject(&leftWall,0);
+	sceneWorld.addObject(&rightWall,1);
 	//sceneWorld.addObject(&middle);
-	sceneWorld.addObject(&left);
+	sceneWorld.addObject(&left,2);
+
 	//sceneWorld.addObject(&right);
 
 	//sceneWorld.addObject(S2);

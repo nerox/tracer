@@ -14,19 +14,18 @@ class plane: public shape
 	plane(const tuple& c){center=c;
 						  shapeTransform.setIdentity();
 						 }
-	std::list<double> ray_hits_me(const ray& r){
-		std::list<double> localHitList;
+	double ray_hits_me(const ray& r, double near_hit_point){
 		matrix inv=invertMatrix(this->shapeTransform);
 		tuple transformRayOrigin=r.origin()*inv;
 		tuple transformRayDestination=r.direction()*inv;
 		//std::cout << transformRayDestination.y() << "\n";
 		if(abs(transformRayDestination.y())>EPSILON2){
 			double t=-transformRayOrigin.y()/transformRayDestination.y();
-			if(t>=0){
-				localHitList.push_back(t);
+			if(t>=0 && near_hit_point>t){
+				near_hit_point=t;
 			}
 		}
-		return localHitList;
+		return near_hit_point;
 	}
 	tuple normal_at(tuple point){
 		matrix inv = invertMatrix(this->shapeTransform);

@@ -17,9 +17,8 @@ class shape
     virtual tuple normal_at(tuple point){
     	return tuple(0,1,0,1);
     }
-	virtual std::list<double> ray_hits_me(const ray& r){
-		std::list<double> localHitList;
-		return localHitList;
+	virtual double ray_hits_me(const ray& r, double near_hit_point){
+		return near_hit_point;
 	}
 	tuple center;
 	matrix shapeTransform;

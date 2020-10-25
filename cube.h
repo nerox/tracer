@@ -17,8 +17,7 @@ class cube: public shape
 		center=c;
 		shapeTransform.setIdentity();
 	}
-	std::list<double> ray_hits_me(const ray& r){
-		std::list<double> localHitList;
+	double ray_hits_me(const ray& r, double near_hit_point){
 		matrix inv=invertMatrix(this->shapeTransform);
 		tuple transformRayOrigin=r.origin()*inv;
 		tuple transformRayDestination=r.direction()*inv;
@@ -35,12 +34,10 @@ class cube: public shape
 		if (tmin< tmax && tmin>0 && tmax>0)
 		{
 			
-			localHitList.push_back(tmax);
-			localHitList.push_back(tmin);
-
+			near_hit_point=tmin;
 		}
 
-		return localHitList;
+		return near_hit_point;
 	};
 	double maximum( double a, double b, double c )
 	{

@@ -3,7 +3,9 @@ import os
 #OTHER THINGS TO CONSIDER THIS CAN BE AUTOMATED TO READ N FILES WITH DIFFERENT SETUPS
 def runtest():
 	inputjson=readjson()
-	command="./arguments h {} w {} fv {} sh {} fl {} fr {} pr {} v{} o {} fm {} {} {}".format(
+	os.system("rm -rf out.ppm")
+	os.system("g++ main.cpp -pthread -lm -o main")
+	command="./main h {} w {} fv {} sh {} rl {} rf {} pr {} v{} o {} fm {} {} {} to {} {} {} up {} {} {} >> out.ppm".format(
 												inputjson['resolution']['height'],
 												inputjson['resolution']['width'],
 												inputjson['camera']['fieldview'],
@@ -25,7 +27,6 @@ def runtest():
 
 												)
 	os.system(command)
-	print("call to c binary")
 
 def readjson():
 	with open('setup.json') as json_file:

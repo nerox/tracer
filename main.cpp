@@ -1,5 +1,7 @@
 #include <iostream>
 #include <pthread.h>
+#include <stdlib.h>
+#include <sstream> 
 #include <sys/sysinfo.h>
 #include "shape.h"
 #include "tuple.h"
@@ -16,9 +18,12 @@
 #include "camera.h"
 #define EPSILON 0.0001
 #define REMAIN 2
-#define OBJECTS_TOTAL 3
-#define X_DIM 1920
-#define Y_DIM 1080
+
+int width,height,fieldview,objects;
+bool shadows,reflections,refractions,precision,vector;
+int from[3];
+int to[3];
+int up[3];
 world sceneWorld;
 camera worldCamera;
 struct Thread_Positions
@@ -165,7 +170,7 @@ bool isPointShadow(const tuple inputPoint, const int remain){
 	double nearHitPoint = std::numeric_limits<double>::max(); //set to infinity
 	double returnedHitPoint;
 	int objectPoistion;
-	for (it = 0; it <OBJECTS_TOTAL; it++){
+	for (it = 0; it <objects; it++){
 
 		returnedHitPoint=(sceneWorld.objectsInWorld[it])->ray_hits_me(r,nearHitPoint);
 		if(returnedHitPoint<nearHitPoint){
@@ -209,7 +214,7 @@ tuple color(const ray& r, int remain,std::list<shape*> *containers){
 	double returnedHitPoint;
 
 	int objectPoistion;
-	for (it = 0; it <OBJECTS_TOTAL; it++){
+	for (it = 0; it <objects; it++){
 
 		returnedHitPoint=(sceneWorld.objectsInWorld[it])->ray_hits_me(r,nearHitPoint);
 		if(returnedHitPoint<nearHitPoint){
@@ -251,15 +256,30 @@ tuple color(const ray& r, int remain,std::list<shape*> *containers){
 
 		/*End Comps*/
 		/*Shade Hit function*/
-		bool isShadow=isPointShadow(over_point,5);
+		bool isShadow=false;
+		if (shadows){
+			isShadow=isPointShadow(over_point,5);
+		}
 		tuple color= lighting(nearHitPointMaterial, sceneWorld.sourceLight,over_point,eyev, normalv,isShadow,nearHitPointMaterial.transparency);
 		/*std::cout << color.x() << " " << color.y() << " " << color.z() << " color \n";
 		std::cout << reflectv.x() << " " << reflectv.y() << " " << reflectv.z() << " reflectv \n";
 		std::cout << over_point.x() << " " << over_point.y() << " " << over_point.z() << " over_point \n";*/
 
-		tuple refractedColor=refractedworld(under_point, normalv,eyev,nearHitPointMaterial.transparency,
+		tuple refractedColor;
+		if(refractions){
+			refractedColor=refractedworld(under_point, normalv,eyev,nearHitPointMaterial.transparency,
 											nratio,sin2_t,cos_i, remain,containers);
-		tuple reflectedColor=reflectedworld( nearHitPointMaterial.reflective, reflectv, over_point,remain, containers);
+		}
+		else{
+			refractedColor=tuple(0,0,0,0);
+		}
+		tuple reflectedColor;
+		if(reflections){
+			reflectedColor=reflectedworld( nearHitPointMaterial.reflective, reflectv, over_point,remain, containers);
+		}
+		else{
+			reflectedColor=tuple(0,0,0,0);
+		}
 		if(nearHitPointMaterial.reflective>0 && nearHitPointMaterial.transparency>0){
 			double reflectance = schlick(cos_i, n1, n2,sin2_t);
 			return color+refractedColor*(1-reflectance)+reflectedColor*reflectance;
@@ -292,8 +312,8 @@ void *thread_renderWorld(void *arg)
 	std::cout << localp->tid << " "  << "\n";*/
 
 	int pos=0;
-	for (j=localp->start/X_DIM;j<localp->end/X_DIM;j++){
-		for(i=localp->start%X_DIM;i <worldCamera.hsize;i++){
+	for (j=localp->start/width;j<localp->end/width;j++){
+		for(i=localp->start%width;i <worldCamera.hsize;i++){
 			ray r= rayforPixel(worldCamera, i, j);
 			std::list<shape*> containers;
 			tuple col = color(r,REMAIN, &containers);
@@ -311,10 +331,10 @@ void renderWorld(){
     int threads_to_spawn= get_nprocs_conf();
     ptr = (pthread_t*)malloc(threads_to_spawn*sizeof(pthread_t));
     pthreadinfo = (Thread_Positions*)malloc(threads_to_spawn*sizeof(Thread_Positions));
-    int chunk = (Y_DIM*X_DIM)/threads_to_spawn;
+    int chunk = (width*height)/threads_to_spawn;
     int start=0;
     int end=0;
-    while(start<(Y_DIM*X_DIM)){
+    while(start<(width*height)){
         struct Thread_Positions p1;
         pthreadinfo[i].start=start;
         pthreadinfo[i].end=start+chunk;
@@ -335,27 +355,24 @@ void renderWorld(){
 			std::cout << ir << " " << ig << " " << ib << "\n";
     	}
     }
-    printf("In main thread\n");
     free(pthreadinfo);
     free(ptr);  
 }
 
 
 
-
-int main(){
-	//set coordinates and dimensions of the canvas
-	std::cout << "P3\n" << X_DIM << " "<< Y_DIM << "\n255\n";
-	//CREATE camera
+void startWorld(){
+		//CREATE camera
 	// with fieldview of pi/2
-	worldCamera.setCamera(X_DIM,Y_DIM,M_PI/3);
-	tuple from(-10,1,-15,1);
-	tuple to (0,0,0,1);
-	tuple up(0,10,0,1);
-	worldCamera.setViewTransform(from,to,up);
+	std::cout << "P3\n" << width << " "<< height << "\n255\n";
+	worldCamera.setCamera(width,height,M_PI/fieldview);
+	tuple from_t(from[0],from[1],from[2],1);
+	tuple to_t(to[0],to[1],to[2],1);
+	tuple up_t(up[0],up[1],up[2],1);
+	worldCamera.setViewTransform(from_t,to_t,up_t);
 	//Set light
 	sceneWorld.sourceLight= light(tuple(-10,10.0,-10,1.0),tuple(1,1,1,1));
-	sceneWorld.createWorldList(OBJECTS_TOTAL);
+	sceneWorld.createWorldList(objects);
 	//TODO create a general way of creating the scene for testing
 	plane floor= plane(tuple(0,0,0,0));
 	floor.shapeTransform=translation(tuple(0,0,0,1));
@@ -419,4 +436,84 @@ int main(){
 	//END TODO
 
 	renderWorld();
+}
+int main(int argc, char *argv[]){
+	//set coordinates and dimensions of the canvas
+	//std::cout << "There are " << argc << " arguments:\n";
+
+    // Loop through each argument and print its number and value
+    for (int count{ 0 }; count < argc; ++count)
+    {
+        if(argv[count] == std::string("w")){
+              std::stringstream temp(argv[count+1]); 
+              temp >> width; 
+              //std::cout <<  width<< " ancho\n";  
+        }
+        if(argv[count]==std::string("h")){
+              std::stringstream temp(argv[count+1]); 
+              temp >> height; 
+              //std::cout <<  height<<" alto\n"; 
+ 
+        }
+        if(argv[count]==std::string("fv")){
+              std::stringstream temp(argv[count+1]); 
+              temp >> fieldview; 
+              //std::cout << fieldview<< " field view\n";    
+        }
+        if(argv[count]==std::string("sh")){
+              shadows= (std::string(argv[count+1])=="1");
+              //std::cout <<  shadows << " shadows\n";    
+        }
+        if(argv[count]==std::string("rl")){
+              reflections= (std::string(argv[count+1])=="1");
+              //std::cout <<  reflections<<" reflection\n";    
+        }
+        if(argv[count]==std::string("rf")){
+              refractions= (std::string(argv[count+1])=="1");
+              //std::cout <<  refractions<<" refraction\n";    
+        }
+        if(argv[count]==std::string("pr")){
+              precision= (std::string(argv[count+1])=="1");
+              //std::cout <<  precision<<" precision\n";    
+        }
+        if(argv[count]==std::string("v")){
+              vector= (std::string(argv[count+1])=="1");
+              //std::cout <<  vector <<" vector\n";    
+        }
+        if(argv[count]==std::string("o")){
+              std::stringstream temp(argv[count+1]); 
+              temp >> objects; 
+              //std::cout <<  objects<<" objects\n";    
+        }
+        if(argv[count]==std::string("fm")){
+              std::stringstream temp(argv[count+1]); 
+              temp >> from[0]; 
+              std::stringstream temp1(argv[count+2]); 
+              temp1 >> from[1]; 
+              std::stringstream temp2(argv[count+3]); 
+              temp2 >> from[2]; 
+              //std::cout <<  from[0]<< " "<<from[1]<< " "<<from[2] <<" from\n";    
+        }
+        if(argv[count]==std::string("to")){
+              std::stringstream temp(argv[count+1]); 
+              temp >> to[0]; 
+              std::stringstream temp1(argv[count+2]); 
+              temp1 >> to[1]; 
+              std::stringstream temp2(argv[count+3]); 
+              temp2 >> to[2]; 
+              //std::cout <<  to[0]<< " "<<to[1]<< " "<<to[2] <<" to\n";    
+        }
+        if(argv[count]==std::string("up")){
+              std::stringstream temp(argv[count+1]); 
+              temp >> up[0]; 
+              std::stringstream temp1(argv[count+2]); 
+              temp1 >> up[1]; 
+              std::stringstream temp2(argv[count+3]); 
+              temp2 >> up[2]; 
+              //std::cout <<  up[0]<< " "<<up[1]<< " "<<up[2] <<" up\n";    
+        }
+    }
+    startWorld();
+    return 0;
+
 }

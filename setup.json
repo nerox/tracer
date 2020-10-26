@@ -5,13 +5,13 @@
 					},
 	"camera":{
 				"from":[-10,1,-15],
-				"to":[0,0,0,1],
+				"to":[0,0,0],
 				"up":[0,10,0],
 				"fieldview":3
 	},
-	"shades": 1,
-	"reflect": 1,
-	"refract": 1,
+	"shades": 0,
+	"reflect": 0,
+	"refract": 0,
 	"precision": 1,
 	"neon": 0,
 	"objects": 3

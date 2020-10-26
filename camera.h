@@ -4,24 +4,10 @@
 #include "tuple.h"
 class camera {
 public:
-	camera(double hs, double vs, double fv){
-		hsize=hs;
-		vsize=vs;
-		fieldOfView=fv;
-		cameraTransform.setIdentity();
-		halfView=tan(fieldOfView/2.0);
-		aspect=hsize/vsize;
-		if (aspect>=1){
-			halfWidth=halfView;
-			halfHeight=halfView/aspect;
-		}
-		else{
-			halfWidth=halfView*aspect;
-			halfHeight=halfView;
+	camera(){
 
-		}
-		pixelSize=(halfWidth*2.0)/hsize;
 	}
+	void setCamera(double hs, double vs, double fv);
 	void setViewTransform(tuple& from, const tuple& to, const tuple& up);
 	double hsize;
 	double vsize;
@@ -33,6 +19,24 @@ public:
 	double halfHeight;
 	matrix  cameraTransform;
 };
+void camera::setCamera(double hs, double vs, double fv){
+		this->hsize=hs;
+		this->vsize=vs;
+		this->fieldOfView=fv;
+		this->cameraTransform.setIdentity();
+		this->halfView=tan(fieldOfView/2.0);
+		this->aspect=hsize/vsize;
+		if (aspect>=1){
+			this->halfWidth=halfView;
+			this->halfHeight=halfView/aspect;
+		}
+		else{
+			this->halfWidth=halfView*aspect;
+			this->halfHeight=halfView;
+
+		}
+		this->pixelSize=(halfWidth*2.0)/hsize;
+}
 void camera::setViewTransform( tuple& from, const tuple& to, const tuple& up){
 	tuple forward =unit_vector(to-from);
 	tuple upn = unit_vector(up);

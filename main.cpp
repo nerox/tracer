@@ -1,4 +1,6 @@
 #include <iostream>
+#include <pthread.h>
+#include <sys/sysinfo.h>
 #include "shape.h"
 #include "tuple.h"
 #include "ray.h"
@@ -18,12 +20,13 @@
 #define X_DIM 1920
 #define Y_DIM 1080
 world sceneWorld;
-
+camera worldCamera;
 struct Thread_Positions
 {
-     int xpos;
-     int ypos;
-
+     int start;
+     int end;
+     int tid;
+     tuple * tuplelist;
 };
 
 
@@ -268,47 +271,84 @@ tuple color(const ray& r, int remain,std::list<shape*> *containers){
 	}
 	return tuple(0.0,0.0,0.0,1.0);
 }
-void renderWorld(const camera& worldCamera){
+void *thread_renderWorld(void *arg)
+{
+    struct Thread_Positions *localp;
+    localp =(struct Thread_Positions*) arg;
+   	localp->tuplelist=(tuple*)malloc((localp->end-localp->start)*sizeof(tuple));
+    cpu_set_t cpuset;
+    // CPU_ZERO: This macro initializes the CPU set set to be the empty set.
+    CPU_ZERO(&cpuset);
+    // CPU_SET: This macro adds cpu to the CPU set set.
+    CPU_SET(localp->tid, &cpuset);
+    const pthread_t pid = pthread_self();
+    // pthread_setaffinity_np: The pthread_setaffinity_np() function sets the CPU affinity mask of the thread thread to the CPU set pointed to by cpuset. If the call is successful, and the thread is not currently running on one of the CPUs in cpuset, then it is migrated to one of those CPUs.
+    const int set_result = pthread_setaffinity_np(pid, sizeof(cpu_set_t), &cpuset);
 	int j,i,k;
 	//worldCamera.vsize
 	//worldCamera.hsize
-	i=0;
-	j=0;
-	for (k=0;k<worldCamera.vsize*worldCamera.hsize;k++){
-		if(i<worldCamera.hsize){
+	/*std::cout << i << " "  << "\n";
+	std::cout << j << " "  << "\n";
+	std::cout << localp->tid << " "  << "\n";*/
+
+	int pos=0;
+	for (j=localp->start/X_DIM;j<localp->end/X_DIM;j++){
+		for(i=localp->start%X_DIM;i <worldCamera.hsize;i++){
 			ray r= rayforPixel(worldCamera, i, j);
 			std::list<shape*> containers;
 			tuple col = color(r,REMAIN, &containers);
-			int ir = int(255.99*col.r()); 
-			int ig = int(255.99*col.g()); 
-			int ib = int(255.99*col.b()); 
-			std::cout << ir << " " << ig << " " << ib << "\n";
-			i++;
-		}
-		else{
-			j++;
-			i=0;
+			localp->tuplelist[pos]=col;
+			pos++;
 		}
 	}
-}
-void ray_at_pixel(const camera& worldCamera,int i,int j){
-	ray r= rayforPixel(worldCamera, i, j);
-	std::cout << r.origin().x() << " " << r.origin().y()<< " " << r.origin().z() << "\n";
-	std::cout << r.direction().x() << " " << r.direction().y()<< " " << r.direction().z() << "\n";
-	std::list<shape*> containers;
-	tuple col = color(r,2,&containers);
-	int ir = int(255.99*col.r()); 
-	int ig = int(255.99*col.g()); 
-	int ib = int(255.99*col.b()); 
-	//std::cout << col.r() << " " << col.g() << " " << col.b() << "\n";
 
+    return NULL;
 }
+void renderWorld(){
+    pthread_t *ptr;
+    Thread_Positions *pthreadinfo;
+    int i=0;
+    int threads_to_spawn= get_nprocs_conf();
+    ptr = (pthread_t*)malloc(threads_to_spawn*sizeof(pthread_t));
+    pthreadinfo = (Thread_Positions*)malloc(threads_to_spawn*sizeof(Thread_Positions));
+    int chunk = (Y_DIM*X_DIM)/threads_to_spawn;
+    int start=0;
+    int end=0;
+    while(start<(Y_DIM*X_DIM)){
+        struct Thread_Positions p1;
+        pthreadinfo[i].start=start;
+        pthreadinfo[i].end=start+chunk;
+        pthreadinfo[i].tid=i;  
+        pthread_create(&ptr[i], NULL, thread_renderWorld, &pthreadinfo[i]);
+        start+=chunk;
+        i++;
+
+    }
+           
+    for(i = 0; i < threads_to_spawn; i++)
+        pthread_join(ptr[i], NULL);
+    for(i=0;i< threads_to_spawn;i++){
+    	for(start=0;start<chunk;start++){
+	    	int ir = int(255.99*pthreadinfo[i].tuplelist[start].r()); 
+			int ig = int(255.99*pthreadinfo[i].tuplelist[start].g()); 
+			int ib = int(255.99*pthreadinfo[i].tuplelist[start].b()); 
+			std::cout << ir << " " << ig << " " << ib << "\n";
+    	}
+    }
+    printf("In main thread\n");
+    free(pthreadinfo);
+    free(ptr);  
+}
+
+
+
+
 int main(){
 	//set coordinates and dimensions of the canvas
 	std::cout << "P3\n" << X_DIM << " "<< Y_DIM << "\n255\n";
 	//CREATE camera
 	// with fieldview of pi/2
-	camera worldCamera(X_DIM,Y_DIM,M_PI/3);
+	worldCamera.setCamera(X_DIM,Y_DIM,M_PI/3);
 	tuple from(-10,1,-15,1);
 	tuple to (0,0,0,1);
 	tuple up(0,10,0,1);
@@ -378,5 +418,5 @@ int main(){
 	//sceneWorld.addObject(S2);
 	//END TODO
 
-	renderWorld(worldCamera);
+	renderWorld();
 }

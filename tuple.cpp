@@ -14,7 +14,7 @@ inline std::ostream& operator<<(std::ostream &os, const tuple &t){
 	return os;
 }
 inline void tuple::make_unit(){
-	double k= 1.0/ sqrt(e[0]*e[0]+e[1]*e[1]+e[2]*e[2]);
+	float k= 1.0/ sqrt(e[0]*e[0]+e[1]*e[1]+e[2]*e[2]);
 	e[0] *= k; 
 	e[1] *= k; 
 	e[2] *= k;
@@ -43,14 +43,14 @@ inline tuple& tuple::operator-=(const tuple &v){
 	e[2] -= v.e[2];
 	return *this;	
 }
-inline tuple& tuple::operator*=(const double& t){
+inline tuple& tuple::operator*=(const float& t){
 	e[0] *= t;
 	e[1] *= t;
 	e[2] *= t;
 	return *this;	
 }
-inline tuple& tuple::operator/=(const double& t){
-	double k= 1.0/t;
+inline tuple& tuple::operator/=(const float& t){
+	float k= 1.0/t;
 	e[0] *= k;
 	e[1] *= k;
 	e[2] *= k;

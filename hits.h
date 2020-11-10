@@ -1,6 +1,6 @@
 struct Sphere_Hits
 {
-     double firstHit;
-     double secondHit;
+     float firstHit;
+     float secondHit;
      bool hitState;
 };

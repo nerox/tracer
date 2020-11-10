@@ -9,21 +9,20 @@
 class sphere: public shape
 {
 	public:
-	sphere(const tuple& c, double r){center=c;
+	sphere(const tuple& c, float r){center=c;
 									radius=r;
 									shapeTransform.setIdentity();
 									}
-	double ray_hits_me(const ray& r, double near_hit_point){
-		matrix inv=invertMatrix(this->shapeTransform);
-		tuple transformRayOrigin=r.origin()*inv;
-		tuple transformRayDestination=r.direction()*inv;
+	float ray_hits_me(const ray& r, float near_hit_point){
+		tuple transformRayOrigin=this->shapeTransform.mutiplyinverse(r.origin());
+		tuple transformRayDestination=this->shapeTransform.mutiplyinverse(r.direction());
 		tuple oc= transformRayOrigin-this->center;
-		double a = dot(transformRayDestination, transformRayDestination);
-		double b = 2.0*dot(oc,transformRayDestination);
-		double c = dot(oc,oc)-1;//this->radius*this->radius;
-		double discriminant = b*b - 4.0*a*c;
-		double t1=(-b-sqrt(discriminant))/(2*a);
-		double t2=(-b+sqrt(discriminant))/(2*a);
+		float a = dot(transformRayDestination, transformRayDestination);
+		float b = 2.0*dot(oc,transformRayDestination);
+		float c = dot(oc,oc)-1;//this->radius*this->radius;
+		float discriminant = b*b - 4.0*a*c;
+		float t1=(-b-sqrt(discriminant))/(2*a);
+		float t2=(-b+sqrt(discriminant))/(2*a);
 		//std::cout << t1 << "esfera \n";
 		//std::cout << t2 << "esfera \n";
 		if(discriminant >0){
@@ -48,7 +47,7 @@ class sphere: public shape
 		//std::cout << u.x() << " " << u.y() << " " << u.z() << " world_normal \n";
 		return u;
 	};
-	double radius;
+	float radius;
 };
 
 #endif

@@ -7,19 +7,19 @@ public:
 	camera(){
 
 	}
-	void setCamera(double hs, double vs, double fv);
+	void setCamera(float hs, float vs, float fv);
 	void setViewTransform(tuple& from, const tuple& to, const tuple& up);
-	double hsize;
-	double vsize;
-	double fieldOfView;
-	double pixelSize;
-	double halfView;
-	double aspect;
-	double halfWidth;
-	double halfHeight;
+	float hsize;
+	float vsize;
+	float fieldOfView;
+	float pixelSize;
+	float halfView;
+	float aspect;
+	float halfWidth;
+	float halfHeight;
 	matrix  cameraTransform;
 };
-void camera::setCamera(double hs, double vs, double fv){
+void camera::setCamera(float hs, float vs, float fv){
 		this->hsize=hs;
 		this->vsize=vs;
 		this->fieldOfView=fv;

@@ -11,20 +11,20 @@
 class shape
 {
   public:
-  	void set_material(const tuple& c, double a,double d, 
-  							 double sp,double sh, double rf,
-  							 double tr,double ri);
+  	void set_material(const tuple& c, float a,float d, 
+  							 float sp,float sh, float rf,
+  							 float tr,float ri);
     virtual tuple normal_at(tuple & point){
     	return tuple(0,1,0,1);
     }
-	virtual double ray_hits_me(const ray& r, double near_hit_point){
+	virtual float ray_hits_me(const ray& r, float near_hit_point){
 		return near_hit_point;
 	}
 	tuple center;
 	matrix shapeTransform;
 	material shapeMaterial;
 };
-void shape::set_material(const tuple& c, double a,double d, double sp,double sh, double rf,double tr,double ri){
+void shape::set_material(const tuple& c, float a,float d, float sp,float sh, float rf,float tr,float ri){
 	this->shapeMaterial= material(c,a,d,sp,sh,rf,tr,ri);
 }
 #endif

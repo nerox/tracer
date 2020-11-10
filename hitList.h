@@ -7,7 +7,7 @@
 #include "shape.h"
 struct ObjectHit
 {
-     double hitPoint;
+     float hitPoint;
      material hitObjectMaterial;
      shape* shapeAdress;
 };
@@ -22,7 +22,7 @@ public:
     void flushHitList();
     void hitListSort();
     int gethitListSize();
-    void addHit(double &inputHitPoint, material& materialHitObject, shape* shapeObjectHit);
+    void addHit(float &inputHitPoint, material& materialHitObject, shape* shapeObjectHit);
 	std::list<ObjectHit> localHitList;//TODO add other data types 
 };
 hitList::~hitList() 
@@ -38,7 +38,7 @@ void hitList::flushHitList(){
 	localHitList.clear();
 }
 
-void hitList::addHit(double &inputHitPoint, material& materialHitObject, shape* shapeObjectHit){
+void hitList::addHit(float &inputHitPoint, material& materialHitObject, shape* shapeObjectHit){
 	ObjectHit insertObject = {inputHitPoint ,materialHitObject,shapeObjectHit};
 	localHitList.push_back(insertObject);
 }

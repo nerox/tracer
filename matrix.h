@@ -6,13 +6,15 @@
 #include "tuple.h"
 class matrix {
 public:
-	double transformationMatrix [4][4];
+	float transformationMatrix [4][4];
+	float inverseTransformationMatrix [4][4];
+
 	matrix(){
 	}
-	matrix(double i0, double i1,double i2, double i3,
-		   double i4, double i5,double i6, double i7,
-		   double i8, double i9,double i10, double i11,
-		   double i12, double i13,double i14, double i15){
+	matrix(float i0, float i1,float i2, float i3,
+		   float i4, float i5,float i6, float i7,
+		   float i8, float i9,float i10, float i11,
+		   float i12, float i13,float i14, float i15){
 
 		transformationMatrix[0][0]=i0;
 		transformationMatrix[0][1]=i1;
@@ -58,6 +60,8 @@ public:
 
 	}
 	void transpose();
+	void invertMatrix();
+	tuple mutiplyinverse(const tuple& t);
 };
 void printmematrix(const matrix& m){
 	std::cout << m.transformationMatrix[0][0]<< " "<<m.transformationMatrix[0][1]<< " "<< m.transformationMatrix[0][2]<< " "<<m.transformationMatrix[0][3]<<"\n";
@@ -67,7 +71,7 @@ void printmematrix(const matrix& m){
 
 }
 void matrix::transpose(){
-	double transPoseMatrix [4][4];
+	float transPoseMatrix [4][4];
 	transPoseMatrix[0][0]=transformationMatrix[0][0];
 	transPoseMatrix[0][1]=transformationMatrix[1][0];
 	transPoseMatrix[0][2]=transformationMatrix[2][0];
@@ -95,6 +99,157 @@ void matrix::transpose(){
 		transformationMatrix[j][3]=transPoseMatrix[j][3];
     	}
 	}
+void matrix::invertMatrix(){
+    float det;
+    int i,j;
+    inverseTransformationMatrix[0][0] =  transformationMatrix[1][1] * transformationMatrix[2][2] * transformationMatrix[3][3] - 
+                					 transformationMatrix[1][1] * transformationMatrix[2][3] * transformationMatrix[3][2] - 
+                					 transformationMatrix[2][1] * transformationMatrix[1][2] * transformationMatrix[3][3] + 
+                					 transformationMatrix[2][1] * transformationMatrix[1][3] * transformationMatrix[3][2] +
+                					 transformationMatrix[3][1] * transformationMatrix[1][2] * transformationMatrix[2][3] - 
+                					 transformationMatrix[3][1] * transformationMatrix[1][3] * transformationMatrix[2][2];
+
+    inverseTransformationMatrix[0][1] = -transformationMatrix[0][1] * transformationMatrix[2][2] * transformationMatrix[3][3] + 
+                					 transformationMatrix[0][1] * transformationMatrix[2][3] * transformationMatrix[3][2] + 
+                					 transformationMatrix[2][1] * transformationMatrix[0][2] * transformationMatrix[3][3] - 
+                					 transformationMatrix[2][1] * transformationMatrix[0][3] * transformationMatrix[3][2] - 
+                					 transformationMatrix[3][1] * transformationMatrix[0][2] * transformationMatrix[2][3] + 
+                					 transformationMatrix[3][1] * transformationMatrix[0][3] * transformationMatrix[2][2];
+
+    inverseTransformationMatrix[1][0] = -transformationMatrix[1][0] * transformationMatrix[2][2] * transformationMatrix[3][3] + 
+                					 transformationMatrix[1][0] * transformationMatrix[2][3] * transformationMatrix[3][2] + 
+                					 transformationMatrix[2][0] * transformationMatrix[1][2] * transformationMatrix[3][3] - 
+                					 transformationMatrix[2][0] * transformationMatrix[1][3] * transformationMatrix[3][2] - 
+                					 transformationMatrix[3][0] * transformationMatrix[1][2] * transformationMatrix[2][3] + 
+                					 transformationMatrix[3][0] * transformationMatrix[1][3] * transformationMatrix[2][2];
+
+    inverseTransformationMatrix[2][0] =  transformationMatrix[1][0] * transformationMatrix[2][1] * transformationMatrix[3][3] - 
+                					 transformationMatrix[1][0] * transformationMatrix[2][3] * transformationMatrix[3][1] - 
+                					 transformationMatrix[2][0] * transformationMatrix[1][1] * transformationMatrix[3][3] + 
+                					 transformationMatrix[2][0] * transformationMatrix[1][3] * transformationMatrix[3][1] + 
+                					 transformationMatrix[3][0] * transformationMatrix[1][1] * transformationMatrix[2][3] - 
+                					 transformationMatrix[3][0] * transformationMatrix[1][3] * transformationMatrix[2][1];
+
+    inverseTransformationMatrix[3][0] = -transformationMatrix[1][0] * transformationMatrix[2][1] * transformationMatrix[3][2] + 
+                					 transformationMatrix[1][0] * transformationMatrix[2][2] * transformationMatrix[3][1] +
+                					 transformationMatrix[2][0] * transformationMatrix[1][1] * transformationMatrix[3][2] - 
+                					 transformationMatrix[2][0] * transformationMatrix[1][2] * transformationMatrix[3][1] - 
+                					 transformationMatrix[3][0] * transformationMatrix[1][1] * transformationMatrix[2][2] + 
+                					 transformationMatrix[3][0] * transformationMatrix[1][2] * transformationMatrix[2][1];
+
+
+
+    inverseTransformationMatrix[1][1] =  transformationMatrix[0][0] * transformationMatrix[2][2] * transformationMatrix[3][3] - 
+                					 transformationMatrix[0][0] * transformationMatrix[2][3] * transformationMatrix[3][2] - 
+                					 transformationMatrix[2][0] * transformationMatrix[0][2] * transformationMatrix[3][3] + 
+                					 transformationMatrix[2][0] * transformationMatrix[0][3] * transformationMatrix[3][2] + 
+                					 transformationMatrix[3][0] * transformationMatrix[0][2] * transformationMatrix[2][3] - 
+                					 transformationMatrix[3][0] * transformationMatrix[0][3] * transformationMatrix[2][2];
+
+    inverseTransformationMatrix[2][1] = -transformationMatrix[0][0] * transformationMatrix[2][1] * transformationMatrix[3][3] + 
+                					 transformationMatrix[0][0] * transformationMatrix[2][3] * transformationMatrix[3][1] + 
+                					 transformationMatrix[2][0] * transformationMatrix[0][1] * transformationMatrix[3][3] - 
+                					 transformationMatrix[2][0] * transformationMatrix[0][3] * transformationMatrix[3][1] - 
+                					 transformationMatrix[3][0] * transformationMatrix[0][1] * transformationMatrix[2][3] + 
+                					 transformationMatrix[3][0] * transformationMatrix[0][3] * transformationMatrix[2][1];
+
+    inverseTransformationMatrix[3][1] =  transformationMatrix[0][0] * transformationMatrix[2][1] * transformationMatrix[3][2] - 
+                					 transformationMatrix[0][0] * transformationMatrix[2][2] * transformationMatrix[3][1] - 
+                					 transformationMatrix[2][0] * transformationMatrix[0][1] * transformationMatrix[3][2] + 
+                					 transformationMatrix[2][0] * transformationMatrix[0][2] * transformationMatrix[3][1] + 
+                					 transformationMatrix[3][0] * transformationMatrix[0][1] * transformationMatrix[2][2] - 
+                					 transformationMatrix[3][0] * transformationMatrix[0][2] * transformationMatrix[2][1];
+
+    inverseTransformationMatrix[0][2] =  transformationMatrix[0][1] * transformationMatrix[1][2] * transformationMatrix[3][3] - 
+                					 transformationMatrix[0][1] * transformationMatrix[1][3] * transformationMatrix[3][2] - 
+                					 transformationMatrix[1][1] * transformationMatrix[0][2] * transformationMatrix[3][3] + 
+                					 transformationMatrix[1][1] * transformationMatrix[0][3] * transformationMatrix[3][2] + 
+                					 transformationMatrix[3][1] * transformationMatrix[0][2] * transformationMatrix[1][3] - 
+                					 transformationMatrix[3][1] * transformationMatrix[0][3] * transformationMatrix[1][2];
+                					 
+    inverseTransformationMatrix[0][3] = -transformationMatrix[0][1] * transformationMatrix[1][2] * transformationMatrix[2][3] + 
+                 					 transformationMatrix[0][1] * transformationMatrix[1][3] * transformationMatrix[2][2] + 
+              						 transformationMatrix[1][1] * transformationMatrix[0][2] * transformationMatrix[2][3] - 
+              						 transformationMatrix[1][1] * transformationMatrix[0][3] * transformationMatrix[2][2] - 
+              						 transformationMatrix[2][1] * transformationMatrix[0][2] * transformationMatrix[1][3] + 
+              						 transformationMatrix[2][1] * transformationMatrix[0][3] * transformationMatrix[1][2];
+
+
+    inverseTransformationMatrix[1][2] = -transformationMatrix[0][0] * transformationMatrix[1][2] * transformationMatrix[3][3] + 
+                					 transformationMatrix[0][0] * transformationMatrix[1][3] * transformationMatrix[3][2] + 
+                					 transformationMatrix[1][0] * transformationMatrix[0][2] * transformationMatrix[3][3] - 
+                					 transformationMatrix[1][0] * transformationMatrix[0][3] * transformationMatrix[3][2] - 
+                					 transformationMatrix[3][0] * transformationMatrix[0][2] * transformationMatrix[1][3] + 
+                					 transformationMatrix[3][0] * transformationMatrix[0][3] * transformationMatrix[1][2];
+
+    inverseTransformationMatrix[2][2] =  transformationMatrix[0][0] * transformationMatrix[1][1] * transformationMatrix[3][3] - 
+                					 transformationMatrix[0][0] * transformationMatrix[1][3] * transformationMatrix[3][1] - 
+                					 transformationMatrix[1][0] * transformationMatrix[0][1] * transformationMatrix[3][3] + 
+                					 transformationMatrix[1][0] * transformationMatrix[0][3] * transformationMatrix[3][1] + 
+                					 transformationMatrix[3][0] * transformationMatrix[0][1] * transformationMatrix[1][3] - 
+                					 transformationMatrix[3][0] * transformationMatrix[0][3] * transformationMatrix[1][1];
+
+    inverseTransformationMatrix[3][2] = -transformationMatrix[0][0] * transformationMatrix[1][1] * transformationMatrix[3][2] + 
+                					 transformationMatrix[0][0] * transformationMatrix[1][2] * transformationMatrix[3][1] + 
+                					 transformationMatrix[1][0] * transformationMatrix[0][1] * transformationMatrix[3][2] - 
+                					 transformationMatrix[1][0] * transformationMatrix[0][2] * transformationMatrix[3][1] - 
+                					 transformationMatrix[3][0] * transformationMatrix[0][1] * transformationMatrix[1][2] + 
+                					 transformationMatrix[3][0] * transformationMatrix[0][2] * transformationMatrix[1][1];
+
+
+    inverseTransformationMatrix[1][3] =  transformationMatrix[0][0] * transformationMatrix[1][2] * transformationMatrix[2][3] - 
+                 					 transformationMatrix[0][0] * transformationMatrix[1][3] * transformationMatrix[2][2] - 
+                 					 transformationMatrix[1][0] * transformationMatrix[0][2] * transformationMatrix[2][3] + 
+                 					 transformationMatrix[1][0] * transformationMatrix[0][3] * transformationMatrix[2][2] + 
+                 					 transformationMatrix[2][0] * transformationMatrix[0][2] * transformationMatrix[1][3] - 
+                 					 transformationMatrix[2][0] * transformationMatrix[0][3] * transformationMatrix[1][2];
+
+    inverseTransformationMatrix[2][3] = -transformationMatrix[0][0] * transformationMatrix[1][1] * transformationMatrix[2][3] + 
+                 					 transformationMatrix[0][0] * transformationMatrix[1][3] * transformationMatrix[2][1] + 
+                 					 transformationMatrix[1][0] * transformationMatrix[0][1] * transformationMatrix[2][3] - 
+                 					 transformationMatrix[1][0] * transformationMatrix[0][3] * transformationMatrix[2][1] - 
+                 					 transformationMatrix[2][0] * transformationMatrix[0][1] * transformationMatrix[1][3] + 
+                 					 transformationMatrix[2][0] * transformationMatrix[0][3] * transformationMatrix[1][1];
+
+    inverseTransformationMatrix[3][3] =  transformationMatrix[0][0] * transformationMatrix[1][1] * transformationMatrix[2][2] - 
+                 					 transformationMatrix[0][0] * transformationMatrix[1][2] * transformationMatrix[2][1] - 
+                 					 transformationMatrix[1][0] * transformationMatrix[0][1] * transformationMatrix[2][2] + 
+                 					 transformationMatrix[1][0] * transformationMatrix[0][2] * transformationMatrix[2][1] + 
+               						 transformationMatrix[2][0] * transformationMatrix[0][1] * transformationMatrix[1][2] - 
+                 					 transformationMatrix[2][0] * transformationMatrix[0][2] * transformationMatrix[1][1];
+
+    det = transformationMatrix[0][0] * inverseTransformationMatrix[0][0] + 
+    	  transformationMatrix[0][1] * inverseTransformationMatrix[1][0] + 
+    	  transformationMatrix[0][2] * inverseTransformationMatrix[2][0] + 
+    	  transformationMatrix[0][3] * inverseTransformationMatrix[3][0];
+
+    if (det == 0){
+    	std::cout << "Error Determinant 0\n";
+    	exit (EXIT_FAILURE);
+    }
+
+    det = 1.0 / det;
+
+    for (j = 0; j < 4; j++){
+    	for (i = 0; i < 4; i++){
+        	inverseTransformationMatrix[j][i] = inverseTransformationMatrix[j][i] * det;
+        }
+    }
+
+}
+tuple matrix::mutiplyinverse(const tuple& t){
+	int i,j;
+	tuple outPutMatrix;
+	outPutMatrix.e[0]= t.e[0]*inverseTransformationMatrix[0][0]+ t.e[1]*inverseTransformationMatrix[0][1]+ 
+					   t.e[2]*inverseTransformationMatrix[0][2]+ t.e[3]*inverseTransformationMatrix[0][3];
+	outPutMatrix.e[1]= t.e[0]*inverseTransformationMatrix[1][0]+ t.e[1]*inverseTransformationMatrix[1][1]+ 
+					   t.e[2]*inverseTransformationMatrix[1][2]+ t.e[3]*inverseTransformationMatrix[1][3];
+	outPutMatrix.e[2]= t.e[0]*inverseTransformationMatrix[2][0]+ t.e[1]*inverseTransformationMatrix[2][1]+ 
+					   t.e[2]*inverseTransformationMatrix[2][2]+ t.e[3]*inverseTransformationMatrix[2][3];
+	outPutMatrix.e[3]= t.e[0]*inverseTransformationMatrix[3][0]+ t.e[1]*inverseTransformationMatrix[3][1]+ 
+					   t.e[2]*inverseTransformationMatrix[3][2]+ t.e[3]*inverseTransformationMatrix[3][3];
+	return outPutMatrix;
+}
 inline matrix translation(const tuple& t){
 	matrix mout;
 	mout.setIdentity();
@@ -111,7 +266,7 @@ inline matrix scale(const tuple& t){
 	mout.transformationMatrix[2][2]=t.e[2];
 	return mout;
 }
-inline matrix rotatex(double angle){
+inline matrix rotatex(float angle){
 	matrix mout;
 	mout.setIdentity();
 	mout.transformationMatrix[1][1]=cos(angle);
@@ -120,7 +275,7 @@ inline matrix rotatex(double angle){
 	mout.transformationMatrix[2][2]=cos(angle);
 	return mout;
 }
-inline matrix rotatey(double angle){
+inline matrix rotatey(float angle){
 	matrix mout;
 	mout.setIdentity();
 	mout.transformationMatrix[0][0]=cos(angle);
@@ -129,7 +284,7 @@ inline matrix rotatey(double angle){
 	mout.transformationMatrix[2][2]=cos(angle);
 	return mout;
 }
-inline matrix rotatez(double angle){
+inline matrix rotatez(float angle){
 	matrix mout;
 	mout.setIdentity();
 	mout.transformationMatrix[0][0]=cos(angle);
@@ -138,7 +293,7 @@ inline matrix rotatez(double angle){
 	mout.transformationMatrix[1][1]=cos(angle);
 	return mout;
 }
-inline matrix shearing(double& xy,double& xz, double& yx, double& yz, double& zx, double& zy){
+inline matrix shearing(float& xy,float& xz, float& yx, float& yz, float& zx, float& zy){
 	matrix mout;
 	mout.transformationMatrix[0][0]=1;
 	mout.transformationMatrix[0][1]=xy;
@@ -199,7 +354,7 @@ inline tuple operator*(const tuple& t,const matrix& m1){
 }
 
 inline matrix invertMatrix(const matrix& m1){
-    double det;
+    float det;
     int i,j;
 	matrix m2;
     m2.transformationMatrix[0][0] =  m1.transformationMatrix[1][1] * m1.transformationMatrix[2][2] * m1.transformationMatrix[3][3] - 
@@ -208,6 +363,13 @@ inline matrix invertMatrix(const matrix& m1){
                 					 m1.transformationMatrix[2][1] * m1.transformationMatrix[1][3] * m1.transformationMatrix[3][2] +
                 					 m1.transformationMatrix[3][1] * m1.transformationMatrix[1][2] * m1.transformationMatrix[2][3] - 
                 					 m1.transformationMatrix[3][1] * m1.transformationMatrix[1][3] * m1.transformationMatrix[2][2];
+
+    m2.transformationMatrix[0][1] = -m1.transformationMatrix[0][1] * m1.transformationMatrix[2][2] * m1.transformationMatrix[3][3] + 
+                					 m1.transformationMatrix[0][1] * m1.transformationMatrix[2][3] * m1.transformationMatrix[3][2] + 
+                					 m1.transformationMatrix[2][1] * m1.transformationMatrix[0][2] * m1.transformationMatrix[3][3] - 
+                					 m1.transformationMatrix[2][1] * m1.transformationMatrix[0][3] * m1.transformationMatrix[3][2] - 
+                					 m1.transformationMatrix[3][1] * m1.transformationMatrix[0][2] * m1.transformationMatrix[2][3] + 
+                					 m1.transformationMatrix[3][1] * m1.transformationMatrix[0][3] * m1.transformationMatrix[2][2];
 
     m2.transformationMatrix[1][0] = -m1.transformationMatrix[1][0] * m1.transformationMatrix[2][2] * m1.transformationMatrix[3][3] + 
                 					 m1.transformationMatrix[1][0] * m1.transformationMatrix[2][3] * m1.transformationMatrix[3][2] + 
@@ -230,12 +392,7 @@ inline matrix invertMatrix(const matrix& m1){
                 					 m1.transformationMatrix[3][0] * m1.transformationMatrix[1][1] * m1.transformationMatrix[2][2] + 
                 					 m1.transformationMatrix[3][0] * m1.transformationMatrix[1][2] * m1.transformationMatrix[2][1];
 
-    m2.transformationMatrix[0][1] = -m1.transformationMatrix[0][1] * m1.transformationMatrix[2][2] * m1.transformationMatrix[3][3] + 
-                					 m1.transformationMatrix[0][1] * m1.transformationMatrix[2][3] * m1.transformationMatrix[3][2] + 
-                					 m1.transformationMatrix[2][1] * m1.transformationMatrix[0][2] * m1.transformationMatrix[3][3] - 
-                					 m1.transformationMatrix[2][1] * m1.transformationMatrix[0][3] * m1.transformationMatrix[3][2] - 
-                					 m1.transformationMatrix[3][1] * m1.transformationMatrix[0][2] * m1.transformationMatrix[2][3] + 
-                					 m1.transformationMatrix[3][1] * m1.transformationMatrix[0][3] * m1.transformationMatrix[2][2];
+
 
     m2.transformationMatrix[1][1] =  m1.transformationMatrix[0][0] * m1.transformationMatrix[2][2] * m1.transformationMatrix[3][3] - 
                 					 m1.transformationMatrix[0][0] * m1.transformationMatrix[2][3] * m1.transformationMatrix[3][2] - 
@@ -264,6 +421,14 @@ inline matrix invertMatrix(const matrix& m1){
                 					 m1.transformationMatrix[1][1] * m1.transformationMatrix[0][3] * m1.transformationMatrix[3][2] + 
                 					 m1.transformationMatrix[3][1] * m1.transformationMatrix[0][2] * m1.transformationMatrix[1][3] - 
                 					 m1.transformationMatrix[3][1] * m1.transformationMatrix[0][3] * m1.transformationMatrix[1][2];
+                					 
+    m2.transformationMatrix[0][3] = -m1.transformationMatrix[0][1] * m1.transformationMatrix[1][2] * m1.transformationMatrix[2][3] + 
+                 					 m1.transformationMatrix[0][1] * m1.transformationMatrix[1][3] * m1.transformationMatrix[2][2] + 
+              						 m1.transformationMatrix[1][1] * m1.transformationMatrix[0][2] * m1.transformationMatrix[2][3] - 
+              						 m1.transformationMatrix[1][1] * m1.transformationMatrix[0][3] * m1.transformationMatrix[2][2] - 
+              						 m1.transformationMatrix[2][1] * m1.transformationMatrix[0][2] * m1.transformationMatrix[1][3] + 
+              						 m1.transformationMatrix[2][1] * m1.transformationMatrix[0][3] * m1.transformationMatrix[1][2];
+
 
     m2.transformationMatrix[1][2] = -m1.transformationMatrix[0][0] * m1.transformationMatrix[1][2] * m1.transformationMatrix[3][3] + 
                 					 m1.transformationMatrix[0][0] * m1.transformationMatrix[1][3] * m1.transformationMatrix[3][2] + 
@@ -286,12 +451,6 @@ inline matrix invertMatrix(const matrix& m1){
                 					 m1.transformationMatrix[3][0] * m1.transformationMatrix[0][1] * m1.transformationMatrix[1][2] + 
                 					 m1.transformationMatrix[3][0] * m1.transformationMatrix[0][2] * m1.transformationMatrix[1][1];
 
-    m2.transformationMatrix[0][3] = -m1.transformationMatrix[0][1] * m1.transformationMatrix[1][2] * m1.transformationMatrix[2][3] + 
-                 					 m1.transformationMatrix[0][1] * m1.transformationMatrix[1][3] * m1.transformationMatrix[2][2] + 
-              						 m1.transformationMatrix[1][1] * m1.transformationMatrix[0][2] * m1.transformationMatrix[2][3] - 
-              						 m1.transformationMatrix[1][1] * m1.transformationMatrix[0][3] * m1.transformationMatrix[2][2] - 
-              						 m1.transformationMatrix[2][1] * m1.transformationMatrix[0][2] * m1.transformationMatrix[1][3] + 
-              						 m1.transformationMatrix[2][1] * m1.transformationMatrix[0][3] * m1.transformationMatrix[1][2];
 
     m2.transformationMatrix[1][3] =  m1.transformationMatrix[0][0] * m1.transformationMatrix[1][2] * m1.transformationMatrix[2][3] - 
                  					 m1.transformationMatrix[0][0] * m1.transformationMatrix[1][3] * m1.transformationMatrix[2][2] - 

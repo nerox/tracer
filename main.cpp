@@ -35,24 +35,24 @@ struct Thread_Positions
 };
 
 
-double schlick(double & cos, const double& n1, const double& n2, const double& sin2_t ){
+float schlick(float & cos, const float& n1, const float& n2, const float& sin2_t ){
 	if (n1 > n2){
 		if (sin2_t>1.0){
 			return 1.0;
 		}
-		double cos_t = sqrt(1.0-sin2_t);
+		float cos_t = sqrt(1.0-sin2_t);
 		cos=cos_t;
 	}
-	double r_0= pow(((n1-n2)/(n1+n2)),2);
+	float r_0= pow(((n1-n2)/(n1+n2)),2);
 	return r_0+(1-r_0)*pow((1-cos),5);
 }
 tuple color(const ray& r, int remain,std::list<shape*> *containers);
 tuple lighting(const material& input_material, const light& input_light, const tuple& point,
-				const tuple& eyev, const tuple& normalv, const bool& isShadow, const double& transparency){
+				const tuple& eyev, const tuple& normalv, const bool& isShadow, const float& transparency){
 	tuple effective_color= input_material.color*input_light.intensity;
 	tuple lightv= unit_vector(input_light.position-point);
 	tuple ambient= effective_color*input_material.ambient;
-	double light_dot_normal= dot(lightv,normalv);
+	float light_dot_normal= dot(lightv,normalv);
 	tuple diffuse;
 	tuple specular;
 	if(isShadow){
@@ -69,12 +69,12 @@ tuple lighting(const material& input_material, const light& input_light, const t
 		//between the reflection vector and the eye vector
 		//a negative number means light reflects away from the eye
 		tuple reflectv=reflect(negate_tuple(lightv),normalv);
-		double reflect_dot_eye= dot(reflectv,eyev);
+		float reflect_dot_eye= dot(reflectv,eyev);
 		if (reflect_dot_eye<=0){
 		 	specular=tuple(0,0,0,1);
 		}
 		else{
-		 	double factor= pow (reflect_dot_eye,input_material.shininess);
+		 	float factor= pow (reflect_dot_eye,input_material.shininess);
 		 	specular= input_light.intensity*input_material.specular*factor;
 		}
 	}
@@ -90,10 +90,10 @@ tuple lighting(const material& input_material, const light& input_light, const t
 	return ambient+specular+diffuse;
 }
 ray rayforPixel(const camera& inputCam, int& px, int& py){
-	double xoffset = (px+0.5)*inputCam.pixelSize;
-	double yoffset = (py+0.5)*inputCam.pixelSize;
-	double worldx = inputCam.halfWidth - xoffset;
-	double worldy = inputCam.halfHeight - yoffset;
+	float xoffset = (px+0.5)*inputCam.pixelSize;
+	float yoffset = (py+0.5)*inputCam.pixelSize;
+	float worldx = inputCam.halfWidth - xoffset;
+	float worldy = inputCam.halfHeight - yoffset;
 	matrix invCamera= invertMatrix(inputCam.cameraTransform);
 	tuple pixel=  tuple(worldx,worldy,-1,1)*invCamera;
 	tuple origin = tuple(0,0,0,1)*invCamera;
@@ -101,7 +101,7 @@ ray rayforPixel(const camera& inputCam, int& px, int& py){
 	tuple direction = unit_vector(pixel-origin);
 	return ray(origin,direction);
 }
-tuple reflectedworld(double& objectReflectance, tuple& reflectv,tuple& overPoint, int remain,std::list<shape*> *containers){
+tuple reflectedworld(float& objectReflectance, tuple& reflectv,tuple& overPoint, int remain,std::list<shape*> *containers){
 
 	if (objectReflectance==0 || remain<=0){
 		return tuple(0,0,0,1);
@@ -115,7 +115,7 @@ tuple reflectedworld(double& objectReflectance, tuple& reflectv,tuple& overPoint
 	}
 	
 }
-void setRefractiveIndexes(std::list<shape*> *containers, double* n1, double* n2,  shape* objectShape){
+void setRefractiveIndexes(std::list<shape*> *containers, float* n1, float* n2,  shape* objectShape){
 	*n1=1.0;
 	*n2=1.0;
 	std::list<shape*>::iterator it;
@@ -148,13 +148,13 @@ void setRefractiveIndexes(std::list<shape*> *containers, double* n1, double* n2,
 
 }
 tuple refractedworld(tuple& underPoint, tuple& normalv, tuple& eyev,
-					 double& transparency, double& nratio,
-					 double& sin2_t, double& cos_i,int remain, std::list<shape*> *containers){
+					 float& transparency, float& nratio,
+					 float& sin2_t, float& cos_i,int remain, std::list<shape*> *containers){
 	if(transparency==0 || remain<=0){
 		return tuple(0,0,0,1);
 	}
 	else{
-		double cos_t = sqrt(1.0-sin2_t);
+		float cos_t = sqrt(1.0-sin2_t);
 		tuple direction= normalv*(nratio*cos_i-cos_t)-eyev*nratio;
 		ray refactRay(underPoint,direction);
 		return color(refactRay,remain-1,containers)*transparency;
@@ -162,13 +162,13 @@ tuple refractedworld(tuple& underPoint, tuple& normalv, tuple& eyev,
 }
 bool isPointShadow(const tuple& inputPoint, const int remain){
 	tuple v = sceneWorld.sourceLight.position-inputPoint;
-	double distance = v.length();
+	float distance = v.length();
 	tuple direction = unit_vector(v);
 	ray r(inputPoint,direction);
 	int it;
 	//TODO REMOVE REPLICATED CODE
-	double nearHitPoint = std::numeric_limits<double>::max(); //set to infinity
-	double returnedHitPoint;
+	float nearHitPoint = std::numeric_limits<float>::max(); //set to infinity
+	float returnedHitPoint;
 	int objectPoistion;
 	for (it = 0; it <objects; it++){
 
@@ -179,7 +179,7 @@ bool isPointShadow(const tuple& inputPoint, const int remain){
 		}
 		
 	}
-	if(nearHitPoint!=std::numeric_limits<double>::max()){
+	if(nearHitPoint!=std::numeric_limits<float>::max()){
 		material nearHitPointMaterial= (sceneWorld.objectsInWorld[objectPoistion])->shapeMaterial;
 		tuple position=r.point_at_parameter(nearHitPoint);
 		tuple rdir=r.direction();
@@ -210,8 +210,8 @@ bool isPointShadow(const tuple& inputPoint, const int remain){
 tuple color(const ray& r, int remain,std::list<shape*> *containers){
 	int it;
 	//TODO REMOVE REPLICATED CODE
-	double nearHitPoint = std::numeric_limits<double>::max(); //set to infinity
-	double returnedHitPoint;
+	float nearHitPoint = std::numeric_limits<float>::max(); //set to infinity
+	float returnedHitPoint;
 
 	int objectPoistion;
 	for (it = 0; it <objects; it++){
@@ -223,7 +223,7 @@ tuple color(const ray& r, int remain,std::list<shape*> *containers){
 		}
 		
 	}
-	if(nearHitPoint!=std::numeric_limits<double>::max()){
+	if(nearHitPoint!=std::numeric_limits<float>::max()){
 		material nearHitPointMaterial= (sceneWorld.objectsInWorld[objectPoistion])->shapeMaterial;
 		tuple position=r.point_at_parameter(nearHitPoint);
 		tuple rdir=r.direction();
@@ -247,12 +247,12 @@ tuple color(const ray& r, int remain,std::list<shape*> *containers){
 		tuple reflectv= reflect(rdir,normalv);
 		tuple over_point= position+(normalv*EPSILON);
 		tuple under_point= position-(normalv*EPSILON);
-		double n1;
-		double n2;
+		float n1;
+		float n2;
 		setRefractiveIndexes(containers, &n1, &n2, (sceneWorld.objectsInWorld[objectPoistion]));
-		double nratio=n1/n2;
-		double cos_i=dot(eyev,normalv);
-		double sin2_t=pow(nratio,2)*(1-pow(cos_i,2));
+		float nratio=n1/n2;
+		float cos_i=dot(eyev,normalv);
+		float sin2_t=pow(nratio,2)*(1-pow(cos_i,2));
 
 		/*End Comps*/
 		/*Shade Hit function*/
@@ -281,7 +281,7 @@ tuple color(const ray& r, int remain,std::list<shape*> *containers){
 			reflectedColor=tuple(0,0,0,0);
 		}
 		if(nearHitPointMaterial.reflective>0 && nearHitPointMaterial.transparency>0){
-			double reflectance = schlick(cos_i, n1, n2,sin2_t);
+			float reflectance = schlick(cos_i, n1, n2,sin2_t);
 			return color+refractedColor*(1-reflectance)+reflectedColor*reflectance;
 		}
 		else{
@@ -425,12 +425,17 @@ void startWorld(){
 	*/
 	///S2.set_material(tuple(1,0.2,1,1),0.1,0.9,0.9,200.0);
 	//sceneWorld.addObject(&floor);
-	sceneWorld.addObject(&leftWall,0);
-	sceneWorld.addObject(&rightWall,1);
-	//sceneWorld.addObject(&middle);
-	sceneWorld.addObject(&left,2);
+	//sceneWorld.addObject(&leftWall,0);
+	//sceneWorld.addObject(&rightWall,1);
+	middle.shapeTransform.invertMatrix();
+	left.shapeTransform.invertMatrix();
+	right.shapeTransform.invertMatrix();
+	
 
-	//sceneWorld.addObject(&right);
+	sceneWorld.addObject(&middle,0);
+	sceneWorld.addObject(&left,1);
+
+	sceneWorld.addObject(&right,2);
 
 	//sceneWorld.addObject(S2);
 	//END TODO

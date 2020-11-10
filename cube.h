@@ -17,14 +17,14 @@ class cube: public shape
 		center=c;
 		shapeTransform.setIdentity();
 	}
-	double ray_hits_me(const ray& r, double& near_hit_point){
+	float ray_hits_me(const ray& r, float& near_hit_point){
 		matrix inv=invertMatrix(this->shapeTransform);
 		tuple transformRayOrigin=r.origin()*inv;
 		tuple transformRayDestination=r.direction()*inv;
-		double tmin,tmax;
-		double xt[2]; 
-		double yt[2]; 
-		double zt[2]; 
+		float tmin,tmax;
+		float xt[2]; 
+		float yt[2]; 
+		float zt[2]; 
 
 		check_axis(transformRayOrigin.x(),transformRayDestination.x(),xt);
 		check_axis(transformRayOrigin.y(),transformRayDestination.y(),yt);
@@ -39,20 +39,20 @@ class cube: public shape
 
 		return near_hit_point;
 	};
-	double maximum( double a, double b, double c )
+	float maximum( float a, float b, float c )
 	{
-		double max = ( a < b ) ? b : a;
+		float max = ( a < b ) ? b : a;
 		return ( ( max < c ) ? c : max );
 	}
-	double minimum( double a, double b, double c )
+	float minimum( float a, float b, float c )
 	{
-		double max = ( a > b ) ? b : a;
+		float max = ( a > b ) ? b : a;
 		return ( ( max > c ) ? c : max );
 	}
 	tuple normal_at(tuple& point){
 		matrix inv = invertMatrix(this->shapeTransform);
 		tuple object_point=point*inv;
-		double maxc=maximum(abs(object_point.x()),abs(object_point.y()),abs(object_point.z()));
+		float maxc=maximum(abs(object_point.x()),abs(object_point.y()),abs(object_point.z()));
 		tuple object_normal;
 		if (maxc==abs(object_point.x())){
 			object_normal=tuple(1,0,0,0);
@@ -71,17 +71,17 @@ class cube: public shape
 		//std::cout << u.x() << " " << u.y() << " " << u.z() << " world_normal \n";
 		return u;
 	};
-	void check_axis(const double& origin,const double& direction, double ts[]){
-		double tmin_numerator=(-1 - origin);
-		double tmax_numerator=( 1 - origin);
-		double tmin,tmax;
+	void check_axis(const float& origin,const float& direction, float ts[]){
+		float tmin_numerator=(-1 - origin);
+		float tmax_numerator=( 1 - origin);
+		float tmin,tmax;
 		if (abs(direction)>= EPSILON2){
 			tmin= tmin_numerator/direction;
 			tmax= tmax_numerator/direction;
 		}
 		else{
-			tmin= tmin_numerator*std::numeric_limits<double>::infinity();
-			tmax= tmax_numerator*std::numeric_limits<double>::infinity();			
+			tmin= tmin_numerator*std::numeric_limits<float>::infinity();
+			tmax= tmax_numerator*std::numeric_limits<float>::infinity();			
 		}
 		if(tmin>tmax){
 			std::swap(tmin,tmax);

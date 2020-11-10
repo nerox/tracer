@@ -6,10 +6,10 @@ class material
 {
 	public:
 	material(){}
-	material(const tuple& c, double& a,
-			double& d, double& sp,
-			double& sh,double& rf,
-			double& tr, double& ri){
+	material(const tuple& c, float& a,
+			float& d, float& sp,
+			float& sh,float& rf,
+			float& tr, float& ri){
 		color=c;
 		ambient=a;
 		diffuse=d;
@@ -21,13 +21,13 @@ class material
 
 	}
 	tuple color;
-	double ambient;
-	double diffuse;
-	double specular;
-	double shininess;
-	double reflective;
-	double transparency;
-	double refractionIndex;
+	float ambient;
+	float diffuse;
+	float specular;
+	float shininess;
+	float reflective;
+	float transparency;
+	float refractionIndex;
 
 };
 #endif

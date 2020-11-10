@@ -16,11 +16,10 @@ public:
 	shape** objectsInWorld;//TODO add other data types 
 	void addObject(shape* newObject, int position);
 	void setViewTransform(const tuple& from, const tuple& to, const tuple& up);
-	void createWorldList(int TotalObjects);
-	bool isPointShadow(const tuple inputPoint);
+	void createWorldList(int& TotalObjects);
 	light sourceLight;
 };
-void world::createWorldList(int TotalObjects){
+void world::createWorldList(int& TotalObjects){
 	objectsInWorld = (shape**)malloc(TotalObjects*sizeof(shape*));
 }
 void world::addObject(shape* newObject, int position){

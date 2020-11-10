@@ -35,7 +35,7 @@ struct Thread_Positions
 };
 
 
-double schlick(double cos, const double n1, const double n2, const double sin2_t ){
+double schlick(double & cos, const double& n1, const double& n2, const double& sin2_t ){
 	if (n1 > n2){
 		if (sin2_t>1.0){
 			return 1.0;
@@ -48,7 +48,7 @@ double schlick(double cos, const double n1, const double n2, const double sin2_t
 }
 tuple color(const ray& r, int remain,std::list<shape*> *containers);
 tuple lighting(const material& input_material, const light& input_light, const tuple& point,
-				const tuple& eyev, const tuple& normalv, const bool isShadow, const double transparency){
+				const tuple& eyev, const tuple& normalv, const bool& isShadow, const double& transparency){
 	tuple effective_color= input_material.color*input_light.intensity;
 	tuple lightv= unit_vector(input_light.position-point);
 	tuple ambient= effective_color*input_material.ambient;
@@ -89,7 +89,7 @@ tuple lighting(const material& input_material, const light& input_light, const t
 
 	return ambient+specular+diffuse;
 }
-ray rayforPixel(const camera& inputCam, int px, int py){
+ray rayforPixel(const camera& inputCam, int& px, int& py){
 	double xoffset = (px+0.5)*inputCam.pixelSize;
 	double yoffset = (py+0.5)*inputCam.pixelSize;
 	double worldx = inputCam.halfWidth - xoffset;
@@ -101,7 +101,7 @@ ray rayforPixel(const camera& inputCam, int px, int py){
 	tuple direction = unit_vector(pixel-origin);
 	return ray(origin,direction);
 }
-tuple reflectedworld(double objectReflectance, tuple reflectv,tuple overPoint, int remain,std::list<shape*> *containers){
+tuple reflectedworld(double& objectReflectance, tuple& reflectv,tuple& overPoint, int remain,std::list<shape*> *containers){
 
 	if (objectReflectance==0 || remain<=0){
 		return tuple(0,0,0,1);
@@ -147,9 +147,9 @@ void setRefractiveIndexes(std::list<shape*> *containers, double* n1, double* n2,
 	//std::cout << *n1 << " " << *n2  << "\n";
 
 }
-tuple refractedworld(tuple underPoint, tuple normalv, tuple eyev,
-					 double transparency, double nratio,
-					 double sin2_t, double cos_i,int remain, std::list<shape*> *containers){
+tuple refractedworld(tuple& underPoint, tuple& normalv, tuple& eyev,
+					 double& transparency, double& nratio,
+					 double& sin2_t, double& cos_i,int remain, std::list<shape*> *containers){
 	if(transparency==0 || remain<=0){
 		return tuple(0,0,0,1);
 	}
@@ -160,7 +160,7 @@ tuple refractedworld(tuple underPoint, tuple normalv, tuple eyev,
 		return color(refactRay,remain-1,containers)*transparency;
 	}
 }
-bool isPointShadow(const tuple inputPoint, const int remain){
+bool isPointShadow(const tuple& inputPoint, const int remain){
 	tuple v = sceneWorld.sourceLight.position-inputPoint;
 	double distance = v.length();
 	tuple direction = unit_vector(v);
@@ -434,7 +434,6 @@ void startWorld(){
 
 	//sceneWorld.addObject(S2);
 	//END TODO
-
 	renderWorld();
 }
 int main(int argc, char *argv[]){

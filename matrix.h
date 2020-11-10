@@ -138,7 +138,7 @@ inline matrix rotatez(double angle){
 	mout.transformationMatrix[1][1]=cos(angle);
 	return mout;
 }
-inline matrix shearing(double xy,double xz, double yx, double yz, double zx, double zy){
+inline matrix shearing(double& xy,double& xz, double& yx, double& yz, double& zx, double& zy){
 	matrix mout;
 	mout.transformationMatrix[0][0]=1;
 	mout.transformationMatrix[0][1]=xy;

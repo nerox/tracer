@@ -17,7 +17,7 @@ class cube: public shape
 		center=c;
 		shapeTransform.setIdentity();
 	}
-	double ray_hits_me(const ray& r, double near_hit_point){
+	double ray_hits_me(const ray& r, double& near_hit_point){
 		matrix inv=invertMatrix(this->shapeTransform);
 		tuple transformRayOrigin=r.origin()*inv;
 		tuple transformRayDestination=r.direction()*inv;
@@ -49,7 +49,7 @@ class cube: public shape
 		double max = ( a > b ) ? b : a;
 		return ( ( max > c ) ? c : max );
 	}
-	tuple normal_at(tuple point){
+	tuple normal_at(tuple& point){
 		matrix inv = invertMatrix(this->shapeTransform);
 		tuple object_point=point*inv;
 		double maxc=maximum(abs(object_point.x()),abs(object_point.y()),abs(object_point.z()));
@@ -71,7 +71,7 @@ class cube: public shape
 		//std::cout << u.x() << " " << u.y() << " " << u.z() << " world_normal \n";
 		return u;
 	};
-	void check_axis(const double origin,const double direction, double ts[]){
+	void check_axis(const double& origin,const double& direction, double ts[]){
 		double tmin_numerator=(-1 - origin);
 		double tmax_numerator=( 1 - origin);
 		double tmin,tmax;

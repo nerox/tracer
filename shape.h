@@ -14,7 +14,7 @@ class shape
   	void set_material(const tuple& c, double a,double d, 
   							 double sp,double sh, double rf,
   							 double tr,double ri);
-    virtual tuple normal_at(tuple point){
+    virtual tuple normal_at(tuple & point){
     	return tuple(0,1,0,1);
     }
 	virtual double ray_hits_me(const ray& r, double near_hit_point){

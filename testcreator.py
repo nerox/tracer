@@ -1,6 +1,6 @@
-import time
 import json
 import os
+import time
 #OTHER THINGS TO CONSIDER THIS CAN BE AUTOMATED TO READ N FILES WITH DIFFERENT SETUPS
 def runtest():
 	inputjson=readjson()
@@ -31,8 +31,7 @@ def runtest():
 	start = time.time()
 	os.system(command)
 	end = time.time()
-	print("Elapsed Time")
-	print(end-start)
+	print(end - start)
 
 def readjson():
 	with open('setup.json') as json_file:

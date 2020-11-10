@@ -36,7 +36,7 @@ class sphere: public shape
 			}
 		return near_hit_point;
 	};
-	tuple normal_at(tuple point){
+	tuple normal_at(tuple& point){
 		matrix inv = invertMatrix(this->shapeTransform);
 		tuple object_point=point*inv;
 		tuple object_normal=object_point-tuple(0,0,0,0);

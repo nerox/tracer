@@ -6,10 +6,10 @@ class material
 {
 	public:
 	material(){}
-	material(const tuple& c, double a,
-			double d, double sp,
-			double sh,double rf,
-			double tr, double ri){
+	material(const tuple& c, double& a,
+			double& d, double& sp,
+			double& sh,double& rf,
+			double& tr, double& ri){
 		color=c;
 		ambient=a;
 		diffuse=d;

@@ -12,7 +12,7 @@
 class cylinder: public shape
 {
 	public:
-	cylinder(const tuple& c, const bool cl)
+	cylinder(const tuple& c, const bool& cl)
 	{
 		center=c;
 		shapeTransform.setIdentity();
@@ -20,7 +20,7 @@ class cylinder: public shape
 		maximum=std::numeric_limits<double>::infinity();
 		closed=cl;
 	}
-	cylinder(const tuple& c, const double min, const double max, const bool cl)
+	cylinder(const tuple& c, const double& min, const double& max, const bool& cl)
 	{
 		center=c;
 		shapeTransform.setIdentity();
@@ -28,7 +28,7 @@ class cylinder: public shape
 		maximum=max;
 		closed=cl;
 	}
-	double ray_hits_me(const ray& r, double near_hit_point){
+	double ray_hits_me(const ray& r, double& near_hit_point){
 		matrix inv=invertMatrix(this->shapeTransform);
 		tuple transformRayOrigin=r.origin()*inv;
 		tuple transformRayDestination=r.direction()*inv;
@@ -58,7 +58,7 @@ class cylinder: public shape
 		}
 		return intersect_caps(transformRayOrigin,transformRayDestination,near_hit_point);
 	};
-	tuple normal_at(tuple point){
+	tuple normal_at(tuple& point){
 		matrix inv = invertMatrix(this->shapeTransform);
 		tuple object_point=point*inv;
 		double dist= (pow(object_point.x(),2)+pow(object_point.z(),2));
@@ -78,12 +78,12 @@ class cylinder: public shape
 		//std::cout << u.x() << " " << u.y() << " " << u.z() << " world_normal \n";
 		return u;
 	};
-	bool check_cap(const tuple& origin, const tuple& direction, double t){
+	bool check_cap(const tuple& origin, const tuple& direction, double& t){
 		double x = origin.x()+t*direction.x();
 		double z = origin.z()+t*direction.z();
 		return (pow(x,2)+pow(z,2))<= 1;
 	}
-	double intersect_caps(const tuple& origin, const tuple& direction,double near_hit_point){
+	double intersect_caps(const tuple& origin, const tuple& direction,double& near_hit_point){
 		if(closed==false || abs(direction.y())<EPSILON2){
 			return near_hit_point;
 		}

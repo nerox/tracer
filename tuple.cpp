@@ -43,13 +43,13 @@ inline tuple& tuple::operator-=(const tuple &v){
 	e[2] -= v.e[2];
 	return *this;	
 }
-inline tuple& tuple::operator*=(const double t){
+inline tuple& tuple::operator*=(const double& t){
 	e[0] *= t;
 	e[1] *= t;
 	e[2] *= t;
 	return *this;	
 }
-inline tuple& tuple::operator/=(const double t){
+inline tuple& tuple::operator/=(const double& t){
 	double k= 1.0/t;
 	e[0] *= k;
 	e[1] *= k;

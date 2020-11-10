@@ -7,7 +7,7 @@ class light
 {
 	public:
 	light(){}
-	light(const tuple& p, tuple i){position=p;intensity=i;}
+	light(const tuple p, tuple i){position=p;intensity=i;}
 	tuple position;
 	tuple intensity;
 };

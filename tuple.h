@@ -26,13 +26,13 @@ public:
 	inline double b() const { return e[2];}
 	inline const tuple& operator+() const{ return *this;}
 	inline double operator[](int i) const { return e[i];}
-	inline double& operator[](int i) { return e[i];}
+	inline double& operator[](int& i) { return e[i];}
 	inline tuple& operator+=(const tuple &v2);
 	inline tuple& operator-=(const tuple &v2);
 	inline tuple& operator*=(const tuple &v2);
 	inline tuple& operator/=(const tuple &v2);
-	inline tuple& operator*=(const double t);
-	inline tuple& operator/=(const double t);
+	inline tuple& operator*=(const double& t);
+	inline tuple& operator/=(const double& t);
 	inline double length() const{
 		return sqrt(e[0]*e[0]+e[1]*e[1]+e[2]*e[2]);
 	}
@@ -57,7 +57,7 @@ inline tuple operator/(const tuple &v1, const tuple &v2){
 	//type is kept from the first input
 	 return tuple(v1.e[0]/v2.e[0],v1.e[1]/v2.e[1],v1.e[2]/v2.e[2],v1.e[3]);
 }
-inline tuple operator*(double t, const tuple &v){
+inline tuple operator*(double& t, const tuple &v){
 	//type is kept from the first input
 	 return tuple(t*v.e[0],t*v.e[1],t*v.e[2],v.e[3]);
 }
@@ -65,19 +65,19 @@ inline tuple operator*(const tuple &v, double t){
 	//type is kept from the first input
 	 return tuple(t*v.e[0],t*v.e[1],t*v.e[2],v.e[3]);
 }
-inline tuple operator/(double t, const tuple &v){
+inline tuple operator/(double t, const tuple v){
 	//type is kept from the first input
 	 return tuple(t/v.e[0],t/v.e[1],t/v.e[2],v.e[3]);
 }
-inline tuple operator/(const tuple &v,double t){
+inline tuple operator/(const tuple v,double t){
 	//type is kept from the first input
 	 return tuple(v.e[0]/t,v.e[1]/t,v.e[2]/t,v.e[3]);
 }
-inline tuple operator+(double t, const tuple &v){
+inline tuple operator+(double& t, const tuple &v){
 	//type is kept from the first input
 	 return tuple(t+v.e[0],t+v.e[1],t+v.e[2],v.e[3]);
 }
-inline tuple operator-(double t, const tuple &v){
+inline tuple operator-(double& t, const tuple &v){
 	//type is kept from the first input
 	 return tuple(t-v.e[0],t-v.e[1],t-v.e[2],v.e[3]);
 }

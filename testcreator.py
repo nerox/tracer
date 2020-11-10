@@ -1,3 +1,4 @@
+import time
 import json
 import os
 #OTHER THINGS TO CONSIDER THIS CAN BE AUTOMATED TO READ N FILES WITH DIFFERENT SETUPS
@@ -26,7 +27,12 @@ def runtest():
 												inputjson['camera']['up'][2],
 
 												)
+	print(command)
+	start = time.time()
 	os.system(command)
+	end = time.time()
+	print("Elapsed Time")
+	print(end-start)
 
 def readjson():
 	with open('setup.json') as json_file:

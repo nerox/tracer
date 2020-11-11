@@ -36,12 +36,11 @@ class sphere: public shape
 		return near_hit_point;
 	};
 	tuple normal_at(tuple& point){
-		matrix inv = invertMatrix(this->shapeTransform);
-		tuple object_point=point*inv;
+		tuple object_point=this->shapeTransform.mutiplyinverse(point); 
 		tuple object_normal=object_point-tuple(0,0,0,0);
-		inv.transpose();
+		//inv.transpose();
 		object_normal.e[3]=0;
-		tuple world_normal=object_normal*inv;
+		tuple world_normal=this->shapeTransform.mutiplyinverseTanspose(object_normal);
 
 		tuple u=unit_vector(world_normal);
 		//std::cout << u.x() << " " << u.y() << " " << u.z() << " world_normal \n";

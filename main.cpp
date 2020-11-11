@@ -406,7 +406,7 @@ void startWorld(){
 						   scale(tuple(0.33,1,0.33,1));
 	left.set_material(tuple(1,0.8,0.1,1),0.2,0.7,0.3,400.0,0.0,0,0);*/
 
-	sphere left= sphere(tuple(0,0,0,0),3);
+	plane left= plane(tuple(0,0,0,0));
 	/*left.shapeTransform=translation(tuple(-2.5,0.33,0.5,1))*
 	scale(tuple(0.33,0.33,0.33,1));*/
 	left.shapeTransform=translation(tuple(-1.5,0,0.75,1))*
@@ -430,7 +430,10 @@ void startWorld(){
 	middle.shapeTransform.invertMatrix();
 	left.shapeTransform.invertMatrix();
 	right.shapeTransform.invertMatrix();
-	
+	middle.shapeTransform.InverseTranspose();
+	left.shapeTransform.InverseTranspose();
+	right.shapeTransform.InverseTranspose();
+
 
 	sceneWorld.addObject(&middle,0);
 	sceneWorld.addObject(&left,1);

@@ -12,7 +12,7 @@
 class cone: public shape
 {
 	public:
-	cone(const tuple& c, const bool& cl)
+	cone(const tuple c, const bool cl)
 	{
 		center=c;
 		shapeTransform.setIdentity();
@@ -20,7 +20,7 @@ class cone: public shape
 		maximum=std::numeric_limits<float>::infinity();
 		closed=cl;
 	}
-	cone(const tuple& c, const float& min, const float& max, const bool& cl)
+	cone(const tuple c, const float min, const float max, const bool cl)
 	{
 		center=c;
 		shapeTransform.setIdentity();
@@ -28,10 +28,9 @@ class cone: public shape
 		maximum=max;
 		closed=cl;
 	}
-	float ray_hits_me(const ray& r, float& near_hit_point){
-		matrix inv=invertMatrix(this->shapeTransform);
-		tuple transformRayOrigin=r.origin()*inv;
-		tuple transformRayDestination=r.direction()*inv;
+	float ray_hits_me(const ray& r, float near_hit_point){
+		tuple transformRayOrigin=this->shapeTransform.mutiplyinverse(r.origin());
+		tuple transformRayDestination=this->shapeTransform.mutiplyinverse(r.direction());
 		float a= pow(transformRayDestination.x(),2)-pow(transformRayDestination.y(),2)+pow(transformRayDestination.z(),2);
 		float b= 2*transformRayOrigin.x()*transformRayDestination.x()+
 				  2*transformRayOrigin.z()*transformRayDestination.z()-
@@ -72,8 +71,7 @@ class cone: public shape
 		return intersect_caps(transformRayOrigin,transformRayDestination,near_hit_point);
 	};
 	tuple normal_at(tuple& point){
-		matrix inv = invertMatrix(this->shapeTransform);
-		tuple object_point=point*inv;
+		tuple object_point=this->shapeTransform.mutiplyinverse(point); 
 		float dist= (pow(object_point.x(),2)+pow(object_point.z(),2));
 		tuple object_normal;
 		if(dist<1 and object_point.y()>=maximum-EPSILON2){
@@ -88,8 +86,8 @@ class cone: public shape
 			}
 			object_normal=tuple(object_point.x(),y,object_point.z(),0);
 		}
-		inv.transpose();
-		tuple world_normal=object_normal*inv;
+		object_normal.e[3]=0;
+		tuple world_normal=this->shapeTransform.mutiplyinverseTanspose(object_normal);
 
 		tuple u=unit_vector(world_normal);
 		//std::cout << u.x() << " " << u.y() << " " << u.z() << " world_normal \n";

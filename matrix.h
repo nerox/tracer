@@ -8,6 +8,7 @@ class matrix {
 public:
 	float transformationMatrix [4][4];
 	float inverseTransformationMatrix [4][4];
+	float transPoseMatrix [4][4];
 
 	matrix(){
 	}
@@ -59,9 +60,11 @@ public:
 		transformationMatrix[3][3]=1;
 
 	}
-	void transpose();
+	void InverseTranspose();
 	void invertMatrix();
 	tuple mutiplyinverse(const tuple& t);
+	tuple mutiplyinverseTanspose(const tuple& t);
+	void transpose();
 };
 void printmematrix(const matrix& m){
 	std::cout << m.transformationMatrix[0][0]<< " "<<m.transformationMatrix[0][1]<< " "<< m.transformationMatrix[0][2]<< " "<<m.transformationMatrix[0][3]<<"\n";
@@ -70,35 +73,27 @@ void printmematrix(const matrix& m){
 	std::cout << m.transformationMatrix[3][0]<< " "<<m.transformationMatrix[3][1]<< " "<< m.transformationMatrix[3][2]<< " "<<m.transformationMatrix[3][3]<<"\n";
 
 }
-void matrix::transpose(){
-	float transPoseMatrix [4][4];
-	transPoseMatrix[0][0]=transformationMatrix[0][0];
-	transPoseMatrix[0][1]=transformationMatrix[1][0];
-	transPoseMatrix[0][2]=transformationMatrix[2][0];
-	transPoseMatrix[0][3]=transformationMatrix[3][0];
+void matrix::InverseTranspose(){
+	transPoseMatrix[0][0]=inverseTransformationMatrix[0][0];
+	transPoseMatrix[0][1]=inverseTransformationMatrix[1][0];
+	transPoseMatrix[0][2]=inverseTransformationMatrix[2][0];
+	transPoseMatrix[0][3]=inverseTransformationMatrix[3][0];
 
-	transPoseMatrix[1][0]=transformationMatrix[0][1];
-	transPoseMatrix[1][1]=transformationMatrix[1][1];
-	transPoseMatrix[1][2]=transformationMatrix[2][1];
-	transPoseMatrix[1][3]=transformationMatrix[3][1];
+	transPoseMatrix[1][0]=inverseTransformationMatrix[0][1];
+	transPoseMatrix[1][1]=inverseTransformationMatrix[1][1];
+	transPoseMatrix[1][2]=inverseTransformationMatrix[2][1];
+	transPoseMatrix[1][3]=inverseTransformationMatrix[3][1];
 
-	transPoseMatrix[2][0]=transformationMatrix[0][2];
-	transPoseMatrix[2][1]=transformationMatrix[1][2];
-	transPoseMatrix[2][2]=transformationMatrix[2][2];
-	transPoseMatrix[2][3]=transformationMatrix[3][2];
+	transPoseMatrix[2][0]=inverseTransformationMatrix[0][2];
+	transPoseMatrix[2][1]=inverseTransformationMatrix[1][2];
+	transPoseMatrix[2][2]=inverseTransformationMatrix[2][2];
+	transPoseMatrix[2][3]=inverseTransformationMatrix[3][2];
 
-	transPoseMatrix[3][0]=transformationMatrix[0][3];
-	transPoseMatrix[3][1]=transformationMatrix[1][3];
-	transPoseMatrix[3][2]=transformationMatrix[2][3];
-	transPoseMatrix[3][3]=transformationMatrix[3][3];
-	int j;
-	for (j = 0; j < 4; j++){
-		transformationMatrix[j][0]=transPoseMatrix[j][0];
-		transformationMatrix[j][1]=transPoseMatrix[j][1];
-		transformationMatrix[j][2]=transPoseMatrix[j][2];
-		transformationMatrix[j][3]=transPoseMatrix[j][3];
-    	}
-	}
+	transPoseMatrix[3][0]=inverseTransformationMatrix[0][3];
+	transPoseMatrix[3][1]=inverseTransformationMatrix[1][3];
+	transPoseMatrix[3][2]=inverseTransformationMatrix[2][3];
+	transPoseMatrix[3][3]=inverseTransformationMatrix[3][3];
+}
 void matrix::invertMatrix(){
     float det;
     int i,j;
@@ -250,6 +245,49 @@ tuple matrix::mutiplyinverse(const tuple& t){
 					   t.e[2]*inverseTransformationMatrix[3][2]+ t.e[3]*inverseTransformationMatrix[3][3];
 	return outPutMatrix;
 }
+tuple matrix::mutiplyinverseTanspose(const tuple& t){
+	int i,j;
+	tuple outPutMatrix;
+	outPutMatrix.e[0]= t.e[0]*transPoseMatrix[0][0]+ t.e[1]*transPoseMatrix[0][1]+ 
+					   t.e[2]*transPoseMatrix[0][2]+ t.e[3]*transPoseMatrix[0][3];
+	outPutMatrix.e[1]= t.e[0]*transPoseMatrix[1][0]+ t.e[1]*transPoseMatrix[1][1]+ 
+					   t.e[2]*transPoseMatrix[1][2]+ t.e[3]*transPoseMatrix[1][3];
+	outPutMatrix.e[2]= t.e[0]*transPoseMatrix[2][0]+ t.e[1]*transPoseMatrix[2][1]+ 
+					   t.e[2]*transPoseMatrix[2][2]+ t.e[3]*transPoseMatrix[2][3];
+	outPutMatrix.e[3]= t.e[0]*transPoseMatrix[3][0]+ t.e[1]*transPoseMatrix[3][1]+ 
+					   t.e[2]*transPoseMatrix[3][2]+ t.e[3]*transPoseMatrix[3][3];
+	return outPutMatrix;
+}
+void matrix::transpose(){
+	double transPoseMatrix [4][4];
+	transPoseMatrix[0][0]=transformationMatrix[0][0];
+	transPoseMatrix[0][1]=transformationMatrix[1][0];
+	transPoseMatrix[0][2]=transformationMatrix[2][0];
+	transPoseMatrix[0][3]=transformationMatrix[3][0];
+
+	transPoseMatrix[1][0]=transformationMatrix[0][1];
+	transPoseMatrix[1][1]=transformationMatrix[1][1];
+	transPoseMatrix[1][2]=transformationMatrix[2][1];
+	transPoseMatrix[1][3]=transformationMatrix[3][1];
+
+	transPoseMatrix[2][0]=transformationMatrix[0][2];
+	transPoseMatrix[2][1]=transformationMatrix[1][2];
+	transPoseMatrix[2][2]=transformationMatrix[2][2];
+	transPoseMatrix[2][3]=transformationMatrix[3][2];
+
+	transPoseMatrix[3][0]=transformationMatrix[0][3];
+	transPoseMatrix[3][1]=transformationMatrix[1][3];
+	transPoseMatrix[3][2]=transformationMatrix[2][3];
+	transPoseMatrix[3][3]=transformationMatrix[3][3];
+	int j;
+	for (j = 0; j < 4; j++){
+		transformationMatrix[j][0]=transPoseMatrix[j][0];
+		transformationMatrix[j][1]=transPoseMatrix[j][1];
+		transformationMatrix[j][2]=transPoseMatrix[j][2];
+		transformationMatrix[j][3]=transPoseMatrix[j][3];
+    	}
+	}
+
 inline matrix translation(const tuple& t){
 	matrix mout;
 	mout.setIdentity();

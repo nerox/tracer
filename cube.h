@@ -17,10 +17,9 @@ class cube: public shape
 		center=c;
 		shapeTransform.setIdentity();
 	}
-	float ray_hits_me(const ray& r, float& near_hit_point){
-		matrix inv=invertMatrix(this->shapeTransform);
-		tuple transformRayOrigin=r.origin()*inv;
-		tuple transformRayDestination=r.direction()*inv;
+	float ray_hits_me(const ray& r, float near_hit_point){
+		tuple transformRayOrigin=this->shapeTransform.mutiplyinverse(r.origin());
+		tuple transformRayDestination=this->shapeTransform.mutiplyinverse(r.direction());
 		float tmin,tmax;
 		float xt[2]; 
 		float yt[2]; 
@@ -50,8 +49,7 @@ class cube: public shape
 		return ( ( max > c ) ? c : max );
 	}
 	tuple normal_at(tuple& point){
-		matrix inv = invertMatrix(this->shapeTransform);
-		tuple object_point=point*inv;
+		tuple object_point=this->shapeTransform.mutiplyinverse(point); 
 		float maxc=maximum(abs(object_point.x()),abs(object_point.y()),abs(object_point.z()));
 		tuple object_normal;
 		if (maxc==abs(object_point.x())){
@@ -63,9 +61,8 @@ class cube: public shape
 		else{
 			object_normal=tuple(0,0,1,0);
 		}
-		inv.transpose();
 		object_normal.e[3]=0;
-		tuple world_normal=object_normal*inv;
+		tuple world_normal=this->shapeTransform.mutiplyinverseTanspose(object_normal);
 
 		tuple u=unit_vector(world_normal);
 		//std::cout << u.x() << " " << u.y() << " " << u.z() << " world_normal \n";

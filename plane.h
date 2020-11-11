@@ -27,12 +27,9 @@ class plane: public shape
 		return near_hit_point;
 	}
 	tuple normal_at(tuple& point){
-		matrix inv = invertMatrix(this->shapeTransform);
-		tuple object_normal=tuple(0,1,0,1);
-		inv.transpose();
-		object_normal.e[3]=0;
-
-		tuple world_normal=object_normal*inv;
+		tuple object_point=this->shapeTransform.mutiplyinverse(point); 
+		tuple object_normal=tuple(0,1,0,0);
+		tuple world_normal=this->shapeTransform.mutiplyinverseTanspose(object_normal);
 		//world_normal.e[3]=0;
 		return unit_vector(world_normal);
 	};

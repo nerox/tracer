@@ -1,5 +1,6 @@
 #ifndef MATRIX
 #define MATRIX
+#include <arm_neon.h>
 #include <math.h>
 #include <iostream>
 #include <stdlib.h>     /* exit, EXIT_FAILURE */
@@ -243,30 +244,52 @@ void matrix::invertMatrix(){
 
 }
 tuple matrix::mutiplyinverse(const tuple& t){
-	int i,j;
-	tuple outPutMatrix;
-	outPutMatrix.e[0]= t.e[0]*inverseTransformationMatrix[0]+ t.e[1]*inverseTransformationMatrix[1]+ 
-					   t.e[2]*inverseTransformationMatrix[2]+ t.e[3]*inverseTransformationMatrix[3];
-	outPutMatrix.e[1]= t.e[0]*inverseTransformationMatrix[4]+ t.e[1]*inverseTransformationMatrix[5]+ 
-					   t.e[2]*inverseTransformationMatrix[6]+ t.e[3]*inverseTransformationMatrix[7];
-	outPutMatrix.e[2]= t.e[0]*inverseTransformationMatrix[8]+ t.e[1]*inverseTransformationMatrix[9]+ 
-					   t.e[2]*inverseTransformationMatrix[10]+ t.e[3]*inverseTransformationMatrix[11];
-	outPutMatrix.e[3]= t.e[0]*inverseTransformationMatrix[12]+ t.e[1]*inverseTransformationMatrix[13]+ 
-					   t.e[2]*inverseTransformationMatrix[14]+ t.e[3]*inverseTransformationMatrix[15];
-	return outPutMatrix;
+    tuple outPutMatrix;
+    // these are the columns A
+    float32x4x4_t Vector_Matrix;
+    // these are the columns B
+    float32x4_t M2_Column_1;
+    // these are the columns C
+    float32x4_t Out_Column_1;
+
+
+    Vector_Matrix=  vld4q_f32( inverseTransformationMatrix);
+    // Zero accumulators for C values
+    Out_Column_1 = vmovq_n_f32(0);
+    
+    // Multiply accumulate in 4x1 blocks, i.e. each column in C
+    M2_Column_1 = vld1q_f32(t.e);
+    Out_Column_1 = vfmaq_laneq_f32(Out_Column_1, Vector_Matrix.val[0], M2_Column_1, 0);
+    Out_Column_1 = vfmaq_laneq_f32(Out_Column_1, Vector_Matrix.val[1], M2_Column_1, 1);
+    Out_Column_1 = vfmaq_laneq_f32(Out_Column_1, Vector_Matrix.val[2], M2_Column_1, 2);
+    Out_Column_1 = vfmaq_laneq_f32(Out_Column_1, Vector_Matrix.val[3], M2_Column_1, 3);
+    vst1q_f32( outPutMatrix.e, Out_Column_1);
+    
+    return outPutMatrix;
 }
 tuple matrix::mutiplyinverseTanspose(const tuple& t){
-	int i,j;
-	tuple outPutMatrix;
-	outPutMatrix.e[0]= t.e[0]*transPoseMatrix[0]+ t.e[1]*transPoseMatrix[1]+ 
-					   t.e[2]*transPoseMatrix[2]+ t.e[3]*transPoseMatrix[3];
-	outPutMatrix.e[1]= t.e[0]*transPoseMatrix[4]+ t.e[1]*transPoseMatrix[5]+ 
-					   t.e[2]*transPoseMatrix[6]+ t.e[3]*transPoseMatrix[7];
-	outPutMatrix.e[2]= t.e[0]*transPoseMatrix[8]+ t.e[1]*transPoseMatrix[9]+ 
-					   t.e[2]*transPoseMatrix[10]+ t.e[3]*transPoseMatrix[11];
-	outPutMatrix.e[3]= t.e[0]*transPoseMatrix[12]+ t.e[1]*transPoseMatrix[13]+ 
-					   t.e[2]*transPoseMatrix[14]+ t.e[3]*transPoseMatrix[15];
-	return outPutMatrix;
+    tuple outPutMatrix;
+    // these are the columns A
+    float32x4x4_t Vector_Matrix;
+    // these are the columns B
+    float32x4_t M2_Column_1;
+    // these are the columns C
+    float32x4_t Out_Column_1;
+
+
+    Vector_Matrix=  vld4q_f32( transPoseMatrix);
+    // Zero accumulators for C values
+    Out_Column_1 = vmovq_n_f32(0);
+    
+    // Multiply accumulate in 4x1 blocks, i.e. each column in C
+    M2_Column_1 = vld1q_f32(t.e);
+    Out_Column_1 = vfmaq_laneq_f32(Out_Column_1, Vector_Matrix.val[0], M2_Column_1, 0);
+    Out_Column_1 = vfmaq_laneq_f32(Out_Column_1, Vector_Matrix.val[1], M2_Column_1, 1);
+    Out_Column_1 = vfmaq_laneq_f32(Out_Column_1, Vector_Matrix.val[2], M2_Column_1, 2);
+    Out_Column_1 = vfmaq_laneq_f32(Out_Column_1, Vector_Matrix.val[3], M2_Column_1, 3);
+    vst1q_f32( outPutMatrix.e, Out_Column_1);
+    
+    return outPutMatrix;
 }
 void matrix::transpose(){
 	double transPoseMatrix [4*4];
@@ -365,6 +388,7 @@ inline matrix shearing(float& xy,float& xz, float& yx, float& yz, float& zx, flo
 	return mout;
 }
 inline matrix operator*(const matrix& m1, const matrix& m2){
+<<<<<<< HEAD
 	int i,j;
 	matrix outPutMatrix;
 	for (j=0;j<4;j++){
@@ -399,6 +423,94 @@ inline tuple operator*(const tuple& t,const matrix& m1){
 	outPutMatrix.e[3]= t.e[0]*m1.transformationMatrix[12]+ t.e[1]*m1.transformationMatrix[13]+ 
 					   t.e[2]*m1.transformationMatrix[14]+ t.e[3]*m1.transformationMatrix[15];
 	return outPutMatrix;
+=======
+    matrix outPutMatrix;
+    // these are the columns A
+    float32x4_t M1_Column_1;
+    float32x4_t M1_Column_2;
+    float32x4_t M1_Column_3;
+    float32x4_t M1_Column_4;
+    
+    // these are the columns B
+    float32x4_t M2_Column_1;
+    float32x4_t M2_Column_2;
+    float32x4_t M2_Column_3;
+    float32x4_t M2_Column_4;
+    
+    // these are the columns C
+    float32x4_t Out_Column_1;
+    float32x4_t Out_Column_2;
+    float32x4_t Out_Column_3;
+    float32x4_t Out_Column_4;
+    
+    M1_Column_1 = vld1q_f32( m2.transformationMatrix);
+    M1_Column_2 = vld1q_f32( m2.transformationMatrix+4);
+    M1_Column_3 = vld1q_f32( m2.transformationMatrix+8);
+    M1_Column_4 = vld1q_f32( m2.transformationMatrix+12);
+
+    
+    // Zero accumulators for C values
+    Out_Column_1 = vmovq_n_f32(0);
+    Out_Column_2 = vmovq_n_f32(0);
+    Out_Column_3 = vmovq_n_f32(0);
+    Out_Column_4 = vmovq_n_f32(0);
+    
+    // Multiply accumulate in 4x1 blocks, i.e. each column in C
+    M2_Column_1 = vld1q_f32(m1.transformationMatrix);
+    Out_Column_1 = vfmaq_laneq_f32(Out_Column_1, M1_Column_1, M2_Column_1, 0);
+    Out_Column_1 = vfmaq_laneq_f32(Out_Column_1, M1_Column_2, M2_Column_1, 1);
+    Out_Column_1 = vfmaq_laneq_f32(Out_Column_1, M1_Column_3, M2_Column_1, 2);
+    Out_Column_1 = vfmaq_laneq_f32(Out_Column_1, M1_Column_4, M2_Column_1, 3);
+    vst1q_f32( outPutMatrix.transformationMatrix, Out_Column_1);
+    
+    M2_Column_2 = vld1q_f32(m1.transformationMatrix+4);
+    Out_Column_2 = vfmaq_laneq_f32(Out_Column_2, M1_Column_1, M2_Column_2, 0);
+    Out_Column_2 = vfmaq_laneq_f32(Out_Column_2, M1_Column_2, M2_Column_2, 1);
+    Out_Column_2 = vfmaq_laneq_f32(Out_Column_2, M1_Column_3, M2_Column_2, 2);
+    Out_Column_2 = vfmaq_laneq_f32(Out_Column_2, M1_Column_4, M2_Column_2, 3);
+    vst1q_f32( outPutMatrix.transformationMatrix+4, Out_Column_2);
+    
+    M2_Column_3 = vld1q_f32(m1.transformationMatrix+8);
+    Out_Column_3 = vfmaq_laneq_f32(Out_Column_3, M1_Column_1, M2_Column_3, 0);
+    Out_Column_3 = vfmaq_laneq_f32(Out_Column_3, M1_Column_2, M2_Column_3, 1);
+    Out_Column_3 = vfmaq_laneq_f32(Out_Column_3, M1_Column_3, M2_Column_3, 2);
+    Out_Column_3 = vfmaq_laneq_f32(Out_Column_3, M1_Column_4, M2_Column_3, 3);
+    vst1q_f32( outPutMatrix.transformationMatrix+8, Out_Column_3);
+    
+    M2_Column_4 = vld1q_f32(m1.transformationMatrix+12);
+    Out_Column_4 = vfmaq_laneq_f32(Out_Column_4, M1_Column_1, M2_Column_4, 0);
+    Out_Column_4 = vfmaq_laneq_f32(Out_Column_4, M1_Column_2, M2_Column_4, 1);
+    Out_Column_4 = vfmaq_laneq_f32(Out_Column_4, M1_Column_3, M2_Column_4, 2);
+    Out_Column_4 = vfmaq_laneq_f32(Out_Column_4, M1_Column_4, M2_Column_4, 3);
+    vst1q_f32( outPutMatrix.transformationMatrix+12, Out_Column_4);
+    int i,j;
+	return outPutMatrix;
+}
+inline tuple operator*(const tuple& t,const matrix& m1){
+    int i,j;
+    tuple outPutMatrix;
+    // these are the columns A
+    float32x4x4_t Vector_Matrix;
+    // these are the columns B
+    float32x4_t M2_Column_1;
+    // these are the columns C
+    float32x4_t Out_Column_1;
+
+
+    Vector_Matrix=  vld4q_f32( m1.transformationMatrix);
+    // Zero accumulators for C values
+    Out_Column_1 = vmovq_n_f32(0);
+    
+    // Multiply accumulate in 4x1 blocks, i.e. each column in C
+    M2_Column_1 = vld1q_f32(t.e);
+    Out_Column_1 = vfmaq_laneq_f32(Out_Column_1, Vector_Matrix.val[0], M2_Column_1, 0);
+    Out_Column_1 = vfmaq_laneq_f32(Out_Column_1, Vector_Matrix.val[1], M2_Column_1, 1);
+    Out_Column_1 = vfmaq_laneq_f32(Out_Column_1, Vector_Matrix.val[2], M2_Column_1, 2);
+    Out_Column_1 = vfmaq_laneq_f32(Out_Column_1, Vector_Matrix.val[3], M2_Column_1, 3);
+    vst1q_f32( outPutMatrix.e, Out_Column_1);
+    
+    return outPutMatrix;
+>>>>>>> 647da49... Added Neon support
 }
 
 inline matrix invertMatrix(const matrix& m1){

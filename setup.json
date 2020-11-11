@@ -4,15 +4,15 @@
 				    "height":1080
 					},
 	"camera":{
-				"from":[-10,1,-15],
+				"from":[-10,20,0],
 				"to":[0,0,0],
 				"up":[0,10,0],
-				"fieldview":3
+				"fieldview":2
 	},
-	"shades": 0,
-	"reflect": 0,
+	"shades": 1,
+	"reflect": 1,
 	"refract": 0,
 	"precision": 1,
 	"neon": 0,
-	"objects": 3
+	"objects": 500
 }

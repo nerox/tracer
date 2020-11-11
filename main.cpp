@@ -16,7 +16,7 @@
 #include "hitList.h"
 #include "matrix.h"
 #include "camera.h"
-#define EPSILON 0.0001
+#define EPSILON 0.01
 #define REMAIN 2
 
 int width,height,fieldview,objects;
@@ -89,14 +89,15 @@ tuple lighting(const material& input_material, const light& input_light, const t
 
 	return ambient+specular+diffuse;
 }
-ray rayforPixel(const camera& inputCam, int& px, int& py){
+ray rayforPixel(camera& inputCam, int& px, int& py){
 	float xoffset = (px+0.5)*inputCam.pixelSize;
 	float yoffset = (py+0.5)*inputCam.pixelSize;
-	float worldx = inputCam.halfWidth - xoffset;
-	float worldy = inputCam.halfHeight - yoffset;
-	matrix invCamera= invertMatrix(inputCam.cameraTransform);
-	tuple pixel=  tuple(worldx,worldy,-1,1)*invCamera;
-	tuple origin = tuple(0,0,0,1)*invCamera;
+	float worldx  = inputCam.halfWidth - xoffset;
+	float worldy  = inputCam.halfHeight - yoffset;
+	tuple pixel_t= tuple(worldx,worldy,-1,1);
+	tuple pixel   = inputCam.cameraTransform.mutiplyinverse(pixel_t);
+	tuple origin_t= tuple(0,0,0,1);
+	tuple origin  =  inputCam.cameraTransform.mutiplyinverse(origin_t);
 	//normalize 
 	tuple direction = unit_vector(pixel-origin);
 	return ray(origin,direction);
@@ -215,7 +216,6 @@ tuple color(const ray& r, int remain,std::list<shape*> *containers){
 
 	int objectPoistion;
 	for (it = 0; it <objects; it++){
-
 		returnedHitPoint=(sceneWorld.objectsInWorld[it])->ray_hits_me(r,nearHitPoint);
 		if(returnedHitPoint<nearHitPoint){
 			objectPoistion=it;
@@ -371,77 +371,95 @@ void startWorld(){
 	tuple up_t(up[0],up[1],up[2],1);
 	worldCamera.setViewTransform(from_t,to_t,up_t);
 	//Set light
-	sceneWorld.sourceLight= light(tuple(-10,10.0,-10,1.0),tuple(1,1,1,1));
+	sceneWorld.sourceLight= light(tuple(-10,20.0,-10,1.0),tuple(1,1,1,1));
 	sceneWorld.createWorldList(objects);
+	int i;
+	for(i=0;i<objects-1;i++){
+		int randnum= (rand()% 4);
+		switch (randnum)
+		{
+		case 0:
+		{
+			sphere *newShape= new sphere(tuple(0,0,0,0),1);
+			sceneWorld.addObject(newShape,i);
+			break;
+		}
+		case 1:
+		{
+			cube *newShape= new cube(tuple(0,0,0,0));
+			sceneWorld.addObject(newShape,i);
+
+			break;
+		}
+		case 2:
+		{
+			int faceOn= (rand()% 2);
+			cylinder *newShape= new cylinder(tuple(0,0,0,0),0,2,faceOn);
+			sceneWorld.addObject(newShape,i);
+			break;
+		}
+		case 3:
+		{
+			cone *newShape= new cone(tuple(0,0,0,0),0,2,0);
+			sceneWorld.addObject(newShape,i);
+			break;
+		}
+		default:
+		break;
+		}
+		int negx = (rand()% 2) ? -1: 1;
+		int negy = (rand()% 2) ? -1: 1;
+		int negz = (rand()% 2) ? -1: 1;
+		float randx= (rand()% 20)*negx;
+		float randy= (rand()% 10)*negy;
+		float randz= (rand()% 20)*negz;
+
+		(sceneWorld.objectsInWorld[i])->shapeTransform=translation(tuple(randx,randy,randz,1));
+		randnum= (rand()% 3);
+		randx= (rand()% 1000)/1000.0;
+		randy= (rand()% 1000)/1000.0;
+		randz= (rand()% 1000)/1000.0;
+		switch (randnum)
+		{
+			case 0:
+			{
+				//objeto opaco
+
+				(sceneWorld.objectsInWorld[i])->set_material(tuple(randx,randy,randz,1),0.1,0.7,0.3,200.0,0.0,0,0);
+				break;
+			}
+			case 1:
+			{
+				//objeto reflectivo
+				(sceneWorld.objectsInWorld[i])->set_material(tuple(randx,randy,randz,1),0.1,0.5,0.7,400.0,1,0,0);
+				break;
+			}
+			case 2:
+			{
+				//objeto transparente
+				(sceneWorld.objectsInWorld[i])->set_material(tuple(randx,randy,randz,1),0.05,0.05,0.5,400.0,0,0.9,1.1);
+				break;
+			}
+			default:
+			break;
+		}
+		(sceneWorld.objectsInWorld[i])->shapeTransform.invertMatrix();
+		(sceneWorld.objectsInWorld[i])->shapeTransform.InverseTranspose();
+	}
 	//TODO create a general way of creating the scene for testing
 	plane floor= plane(tuple(0,0,0,0));
-	floor.shapeTransform=translation(tuple(0,0,0,1));
-	//floor.set_material(tuple(0,1,0,1),0.5,0.7,0.3,400.0,0,0,0);
-	floor.set_material(tuple(0,1,0,1),0.01,0.01,1,400.0,0,0.9,1.1);
-
-	plane leftWall=plane(tuple(0,0,0,0));
-	leftWall.shapeTransform=translation(tuple(0,0,5,1))*
-							 rotatex(M_PI/2);
-	leftWall.set_material(tuple(1,0,0,1),0.5,0.7,0.3,400.0,0,0,0);
-
-	plane rightWall= plane(tuple(0,0,0,0));
-	rightWall.shapeTransform=translation(tuple(5,0,0,1))*
-							 rotatez(M_PI/2);
-	rightWall.set_material(tuple(0,0,1,1),0.5,0.7,0.3,400.0,0,0,0);
-
-	sphere middle= sphere(tuple(0,0,0,0),1);
-	middle.shapeTransform=translation(tuple(0,1,0.5,1));
-	middle.set_material(tuple(0.1,1,0.5,1),0.1,0.7,0.3,300.0,0.0,0,0);
-
-	sphere right= sphere(tuple(0,0,0,0),1);
-	right.shapeTransform=translation(tuple(2.5,1,0.5,1));
-	/*right.shapeTransform=translation(tuple(1.5,0.5,-0.5,1))*
-						   scale(tuple(0.5,0.5,0.5,1));*/
-	right.set_material(tuple(0.5,1,0.1,1),0.1,0.7,0.3,200.0,0.0,0,0);
-
-	//sphere left= sphere(tuple(0,0,0,0),1);
-	/*left.shapeTransform=translation(tuple(-2.5,0.33,0.5,1))*
-	scale(tuple(0.33,0.33,0.33,1));*/
-	/*left.shapeTransform=translation(tuple(-1.5,1.5,0.75,1))*
-						   scale(tuple(0.33,1,0.33,1));
-	left.set_material(tuple(1,0.8,0.1,1),0.2,0.7,0.3,400.0,0.0,0,0);*/
-
-	plane left= plane(tuple(0,0,0,0));
-	/*left.shapeTransform=translation(tuple(-2.5,0.33,0.5,1))*
-	scale(tuple(0.33,0.33,0.33,1));*/
-	left.shapeTransform=translation(tuple(-1.5,0,0.75,1))*
-							rotatex(-M_PI/2)*
-						   scale(tuple(0.33,1,0.33,1));
-	left.set_material(tuple(1,0.8,0.1,1),0.2,0.7,0.3,400.0,0.0,0,0);
-	//sphere S2(tuple(0,0,0,0),0.5);
-	
-	/*	
-		Material properties
-		color=c;
-		ambient=a;
-		diffuse=d;
-		specular=sp;
-		shininess=sh;
-	*/
-	///S2.set_material(tuple(1,0.2,1,1),0.1,0.9,0.9,200.0);
-	//sceneWorld.addObject(&floor);
-	//sceneWorld.addObject(&leftWall,0);
-	//sceneWorld.addObject(&rightWall,1);
-	middle.shapeTransform.invertMatrix();
-	left.shapeTransform.invertMatrix();
-	right.shapeTransform.invertMatrix();
-	middle.shapeTransform.InverseTranspose();
-	left.shapeTransform.InverseTranspose();
-	right.shapeTransform.InverseTranspose();
+	floor.shapeTransform=translation(tuple(0,-21,0,1));
+	//reflective floor as deafult is added
+	floor.set_material(tuple(0,1,1,1),0.1,0.5,0.7,400.0,1,0,0);
+	floor.shapeTransform.invertMatrix();
+	floor.shapeTransform.InverseTranspose();
+	sceneWorld.addObject(&floor,i);
 
 
-	sceneWorld.addObject(&middle,0);
-	sceneWorld.addObject(&left,1);
 
-	sceneWorld.addObject(&right,2);
+	worldCamera.cameraTransform.invertMatrix();
+	worldCamera.cameraTransform.InverseTranspose();
 
-	//sceneWorld.addObject(S2);
-	//END TODO
 	renderWorld();
 }
 int main(int argc, char *argv[]){

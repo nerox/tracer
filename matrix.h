@@ -72,6 +72,16 @@ void printmematrix(const matrix& m){
 	std::cout << m.transformationMatrix[8]<< " "<<m.transformationMatrix[9]<< " "<< m.transformationMatrix[10]<< " "<<m.transformationMatrix[11]<<"\n";
 	std::cout << m.transformationMatrix[12]<< " "<<m.transformationMatrix[13]<< " "<< m.transformationMatrix[14]<< " "<<m.transformationMatrix[15]<<"\n";
 
+    std::cout << m.inverseTransformationMatrix[0]<< " "<<m.inverseTransformationMatrix[1]<< " "<< m.inverseTransformationMatrix[2]<< " "<<m.inverseTransformationMatrix[3]<<"\n";
+    std::cout << m.inverseTransformationMatrix[4]<< " "<<m.inverseTransformationMatrix[5]<< " "<< m.inverseTransformationMatrix[6]<< " "<<m.inverseTransformationMatrix[7]<<"\n";
+    std::cout << m.inverseTransformationMatrix[8]<< " "<<m.inverseTransformationMatrix[9]<< " "<< m.inverseTransformationMatrix[10]<< " "<<m.inverseTransformationMatrix[11]<<"\n";
+    std::cout << m.inverseTransformationMatrix[12]<< " "<<m.inverseTransformationMatrix[13]<< " "<< m.inverseTransformationMatrix[14]<< " "<<m.inverseTransformationMatrix[15]<<"\n";
+
+    std::cout << m.transPoseMatrix[0]<< " "<<m.transPoseMatrix[1]<< " "<< m.transPoseMatrix[2]<< " "<<m.transPoseMatrix[3]<<"\n";
+    std::cout << m.transPoseMatrix[4]<< " "<<m.transPoseMatrix[5]<< " "<< m.transPoseMatrix[6]<< " "<<m.transPoseMatrix[7]<<"\n";
+    std::cout << m.transPoseMatrix[8]<< " "<<m.transPoseMatrix[9]<< " "<< m.transPoseMatrix[10]<< " "<<m.transPoseMatrix[11]<<"\n";
+    std::cout << m.transPoseMatrix[12]<< " "<<m.transPoseMatrix[13]<< " "<< m.transPoseMatrix[14]<< " "<<m.transPoseMatrix[15]<<"\n";
+
 }
 void matrix::InverseTranspose(){
 	transPoseMatrix[0]=inverseTransformationMatrix[0];

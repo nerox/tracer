@@ -10,6 +10,9 @@ public:
 	float transformationMatrix [4*4];
 	float inverseTransformationMatrix [4*4];
 	float transPoseMatrix [4*4];
+    float32x4x4_t Vector_Matrix;
+    float32x4x4_t Vector_Matrix_Inverse;
+
 
 	matrix(){
 	}
@@ -104,6 +107,7 @@ void matrix::InverseTranspose(){
 	transPoseMatrix[13]=inverseTransformationMatrix[7];
 	transPoseMatrix[14]=inverseTransformationMatrix[11];
 	transPoseMatrix[15]=inverseTransformationMatrix[15];
+    Vector_Matrix=  vld4q_f32( transPoseMatrix);
 }
 void matrix::invertMatrix(){
     float det;
@@ -241,19 +245,17 @@ void matrix::invertMatrix(){
         	inverseTransformationMatrix[j*4+i] = inverseTransformationMatrix[j*4+i] * det;
         }
     }
-
+    Vector_Matrix_Inverse=  vld4q_f32( inverseTransformationMatrix);
 }
 tuple matrix::mutiplyinverse(const tuple& t){
     tuple outPutMatrix;
     // these are the columns A
-    float32x4x4_t Vector_Matrix;
     // these are the columns B
     float32x4_t M2_Column_1;
     // these are the columns C
     float32x4_t Out_Column_1;
 
 
-    Vector_Matrix=  vld4q_f32( inverseTransformationMatrix);
     // Zero accumulators for C values
     Out_Column_1 = vmovq_n_f32(0);
     
@@ -270,23 +272,22 @@ tuple matrix::mutiplyinverse(const tuple& t){
 tuple matrix::mutiplyinverseTanspose(const tuple& t){
     tuple outPutMatrix;
     // these are the columns A
-    float32x4x4_t Vector_Matrix;
+   
     // these are the columns B
     float32x4_t M2_Column_1;
     // these are the columns C
     float32x4_t Out_Column_1;
 
 
-    Vector_Matrix=  vld4q_f32( transPoseMatrix);
     // Zero accumulators for C values
     Out_Column_1 = vmovq_n_f32(0);
     
     // Multiply accumulate in 4x1 blocks, i.e. each column in C
     M2_Column_1 = vld1q_f32(t.e);
-    Out_Column_1 = vfmaq_laneq_f32(Out_Column_1, Vector_Matrix.val[0], M2_Column_1, 0);
-    Out_Column_1 = vfmaq_laneq_f32(Out_Column_1, Vector_Matrix.val[1], M2_Column_1, 1);
-    Out_Column_1 = vfmaq_laneq_f32(Out_Column_1, Vector_Matrix.val[2], M2_Column_1, 2);
-    Out_Column_1 = vfmaq_laneq_f32(Out_Column_1, Vector_Matrix.val[3], M2_Column_1, 3);
+    Out_Column_1 = vfmaq_laneq_f32(Out_Column_1, Vector_Matrix_Inverse.val[0], M2_Column_1, 0);
+    Out_Column_1 = vfmaq_laneq_f32(Out_Column_1, Vector_Matrix_Inverse.val[1], M2_Column_1, 1);
+    Out_Column_1 = vfmaq_laneq_f32(Out_Column_1, Vector_Matrix_Inverse.val[2], M2_Column_1, 2);
+    Out_Column_1 = vfmaq_laneq_f32(Out_Column_1, Vector_Matrix_Inverse.val[3], M2_Column_1, 3);
     vst1q_f32( outPutMatrix.e, Out_Column_1);
     
     return outPutMatrix;
@@ -388,42 +389,6 @@ inline matrix shearing(float& xy,float& xz, float& yx, float& yz, float& zx, flo
 	return mout;
 }
 inline matrix operator*(const matrix& m1, const matrix& m2){
-<<<<<<< HEAD
-	int i,j;
-	matrix outPutMatrix;
-	for (j=0;j<4;j++){
-		outPutMatrix.transformationMatrix[j*4]= m1.transformationMatrix[j*4]*m2.transformationMatrix[0]+ 
-												 m1.transformationMatrix[j*4+1]*m2.transformationMatrix[4]+ 
-												 m1.transformationMatrix[j*4+2]*m2.transformationMatrix[8]+ 
-												 m1.transformationMatrix[j*4+3]*m2.transformationMatrix[12];
-		outPutMatrix.transformationMatrix[j*4+1]= m1.transformationMatrix[j*4]*m2.transformationMatrix[1]+ 
-												 m1.transformationMatrix[j*4+1]*m2.transformationMatrix[5]+ 
-												 m1.transformationMatrix[j*4+2]*m2.transformationMatrix[9]+ 
-												 m1.transformationMatrix[j*4+3]*m2.transformationMatrix[13];
-		outPutMatrix.transformationMatrix[j*4+2]= m1.transformationMatrix[j*4]*m2.transformationMatrix[2]+ 
-												 m1.transformationMatrix[j*4+1]*m2.transformationMatrix[6]+ 
-												 m1.transformationMatrix[j*4+2]*m2.transformationMatrix[10]+ 
-												 m1.transformationMatrix[j*4+3]*m2.transformationMatrix[14];
-		outPutMatrix.transformationMatrix[j*4+3]= m1.transformationMatrix[j*4]*m2.transformationMatrix[3]+ 
-												 m1.transformationMatrix[j*4+1]*m2.transformationMatrix[7]+ 
-												 m1.transformationMatrix[j*4+2]*m2.transformationMatrix[11]+ 
-												 m1.transformationMatrix[j*4+3]*m2.transformationMatrix[15];
-	}
-	return outPutMatrix;
-}
-inline tuple operator*(const tuple& t,const matrix& m1){
-	int i,j;
-	tuple outPutMatrix;
-	outPutMatrix.e[0]= t.e[0]*m1.transformationMatrix[0]+ t.e[1]*m1.transformationMatrix[1]+ 
-					   t.e[2]*m1.transformationMatrix[2]+ t.e[3]*m1.transformationMatrix[3];
-	outPutMatrix.e[1]= t.e[0]*m1.transformationMatrix[4]+ t.e[1]*m1.transformationMatrix[5]+ 
-					   t.e[2]*m1.transformationMatrix[6]+ t.e[3]*m1.transformationMatrix[7];
-	outPutMatrix.e[2]= t.e[0]*m1.transformationMatrix[8]+ t.e[1]*m1.transformationMatrix[9]+ 
-					   t.e[2]*m1.transformationMatrix[10]+ t.e[3]*m1.transformationMatrix[11];
-	outPutMatrix.e[3]= t.e[0]*m1.transformationMatrix[12]+ t.e[1]*m1.transformationMatrix[13]+ 
-					   t.e[2]*m1.transformationMatrix[14]+ t.e[3]*m1.transformationMatrix[15];
-	return outPutMatrix;
-=======
     matrix outPutMatrix;
     // these are the columns A
     float32x4_t M1_Column_1;
@@ -510,7 +475,6 @@ inline tuple operator*(const tuple& t,const matrix& m1){
     vst1q_f32( outPutMatrix.e, Out_Column_1);
     
     return outPutMatrix;
->>>>>>> 647da49... Added Neon support
 }
 
 inline matrix invertMatrix(const matrix& m1){

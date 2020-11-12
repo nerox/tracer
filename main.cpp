@@ -1,8 +1,11 @@
 #include <iostream>
+#include <fstream>
+#include <math.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <sstream> 
 #include <sys/sysinfo.h>
+#include <chrono>
 #include "shape.h"
 #include "tuple.h"
 #include "ray.h"
@@ -20,12 +23,13 @@
 #define REMAIN 2
 
 int width,height,fieldview,objects;
-bool shadows,reflections,refractions,precision,vector;
+bool shadows,reflections,refractions,precision,vector,aliasing;
 int from[3];
 int to[3];
 int up[3];
 world sceneWorld;
 camera worldCamera;
+
 struct Thread_Positions
 {
      int start;
@@ -33,7 +37,12 @@ struct Thread_Positions
      int tid;
      tuple * tuplelist;
 };
-
+float jitterMatrix[4 * 2] = {
+    -1.0/4.0,  3.0/4.0,
+     3.0/4.0,  1.0/3.0,
+    -3.0/4.0, -1.0/4.0,
+     1.0/4.0, -3.0/4.0,
+};
 
 float schlick(float & cos, const float& n1, const float& n2, const float& sin2_t ){
 	if (n1 > n2){
@@ -89,7 +98,7 @@ tuple lighting(const material& input_material, const light& input_light, const t
 
 	return ambient+specular+diffuse;
 }
-ray rayforPixel(camera& inputCam, int& px, int& py){
+ray rayforPixel(camera& inputCam, float px, float py){
 	float xoffset = (px+0.5)*inputCam.pixelSize;
 	float yoffset = (py+0.5)*inputCam.pixelSize;
 	float worldx  = inputCam.halfWidth - xoffset;
@@ -161,7 +170,7 @@ tuple refractedworld(tuple& underPoint, tuple& normalv, tuple& eyev,
 		return color(refactRay,remain-1,containers)*transparency;
 	}
 }
-bool isPointShadow(const tuple& inputPoint, const int remain){
+bool isPointShadow(const tuple& inputPoint){
 	tuple v = sceneWorld.sourceLight.position-inputPoint;
 	float distance = v.length();
 	tuple direction = unit_vector(v);
@@ -174,29 +183,15 @@ bool isPointShadow(const tuple& inputPoint, const int remain){
 	for (it = 0; it <objects; it++){
 
 		returnedHitPoint=(sceneWorld.objectsInWorld[it])->ray_hits_me(r,nearHitPoint);
-		if(returnedHitPoint<nearHitPoint){
+		if(returnedHitPoint<nearHitPoint && (sceneWorld.objectsInWorld[it])->shapeMaterial.transparency==0){
 			objectPoistion=it;
 			nearHitPoint=returnedHitPoint;
 		}
-		
+
 	}
 	if(nearHitPoint!=std::numeric_limits<float>::max()){
-		material nearHitPointMaterial= (sceneWorld.objectsInWorld[objectPoistion])->shapeMaterial;
-		tuple position=r.point_at_parameter(nearHitPoint);
-		tuple rdir=r.direction();
-		tuple over_point= position+(rdir*EPSILON);
 		if(nearHitPoint<distance){
-			if(remain!=0){
-				if (nearHitPointMaterial.transparency!=0){
-					return isPointShadow(over_point, remain-1);
-				}
-				else{
-					return true;
-				}
-			}
-			else{
-				return false;
-			}
+			return true;
 		}
 		else{
 			return false;
@@ -258,7 +253,7 @@ tuple color(const ray& r, int remain,std::list<shape*> *containers){
 		/*Shade Hit function*/
 		bool isShadow=false;
 		if (shadows){
-			isShadow=isPointShadow(over_point,5);
+			isShadow=isPointShadow(over_point);
 		}
 		tuple color= lighting(nearHitPointMaterial, sceneWorld.sourceLight,over_point,eyev, normalv,isShadow,nearHitPointMaterial.transparency);
 		/*std::cout << color.x() << " " << color.y() << " " << color.z() << " color \n";
@@ -304,19 +299,42 @@ void *thread_renderWorld(void *arg)
     const pthread_t pid = pthread_self();
     // pthread_setaffinity_np: The pthread_setaffinity_np() function sets the CPU affinity mask of the thread thread to the CPU set pointed to by cpuset. If the call is successful, and the thread is not currently running on one of the CPUs in cpuset, then it is migrated to one of those CPUs.
     const int set_result = pthread_setaffinity_np(pid, sizeof(cpu_set_t), &cpuset);
-	int j,i,k;
+	float j,i;
+	int k;
 	//worldCamera.vsize
 	//worldCamera.hsize
 	/*std::cout << i << " "  << "\n";
 	std::cout << j << " "  << "\n";
 	std::cout << localp->tid << " "  << "\n";*/
 
+
+
+        // Init the pixel to 100% black (no light).
+    
 	int pos=0;
 	for (j=localp->start/width;j<localp->end/width;j++){
 		for(i=localp->start%width;i <worldCamera.hsize;i++){
-			ray r= rayforPixel(worldCamera, i, j);
+			ray r;
+			tuple col= tuple(0,0,0,0);
 			std::list<shape*> containers;
-			tuple col = color(r,REMAIN, &containers);
+			if(aliasing){
+				        // Accumulate light for N samples.
+				for (int sample = 0; sample < 4; ++sample)
+				{
+				float x = (i + jitterMatrix[2*sample]);
+				float y = (j + jitterMatrix[2*sample+1]);
+				r= rayforPixel(worldCamera, x, y);
+				tuple out = color(r,REMAIN, &containers);
+				col = col+out;
+				}
+
+				// Get the average.
+				col= col*0.25;
+			}
+			else{
+				r= rayforPixel(worldCamera, i, j);
+				col = color(r,REMAIN, &containers);
+			}
 			localp->tuplelist[pos]=col;
 			pos++;
 		}
@@ -364,6 +382,7 @@ void renderWorld(){
 void startWorld(){
 		//CREATE camera
 	// with fieldview of pi/2
+	srand((unsigned int)time(NULL));
 	std::cout << "P3\n" << width << " "<< height << "\n255\n";
 	worldCamera.setCamera(width,height,M_PI/fieldview);
 	tuple from_t(from[0],from[1],from[2],1);
@@ -413,8 +432,17 @@ void startWorld(){
 		float randx= (rand()% 20)*negx;
 		float randy= (rand()% 10)*negy;
 		float randz= (rand()% 20)*negz;
-
-		(sceneWorld.objectsInWorld[i])->shapeTransform=translation(tuple(randx,randy,randz,1));
+		float anglex= fmod(rand(), (M_PI*4));
+		float angley= fmod(rand(), (M_PI*4));
+		float anglez= fmod(rand(), (M_PI*4));
+		float scalex= fmod(rand(), 2)+0.1;//avoid scale (0,0,0)
+		float scaley= fmod(rand(), 2)+0.1;//avoid scale (0,0,0);
+		float scalez= fmod(rand(), 2)+0.1;//avoid scale (0,0,0);
+		(sceneWorld.objectsInWorld[i])->shapeTransform=translation(tuple(randx,randy,randz,1))*
+														rotatex(anglex)*
+														rotatey(angley)*
+														rotatez(anglez)*
+														scale(tuple(scalex,scaley,scalez,0));
 		randnum= (rand()% 3);
 		randx= (rand()% 1000)/1000.0;
 		randy= (rand()% 1000)/1000.0;
@@ -437,7 +465,7 @@ void startWorld(){
 			case 2:
 			{
 				//objeto transparente
-				(sceneWorld.objectsInWorld[i])->set_material(tuple(randx,randy,randz,1),0.05,0.05,0.5,400.0,0,0.9,1.1);
+				(sceneWorld.objectsInWorld[i])->set_material(tuple(randx,randy,randz,1),0.1,0,0,400.0,0,0.9,1.1);
 				break;
 			}
 			default:
@@ -459,8 +487,14 @@ void startWorld(){
 
 	worldCamera.cameraTransform.invertMatrix();
 	worldCamera.cameraTransform.InverseTranspose();
-
+ 	auto begin = std::chrono::high_resolution_clock::now();
 	renderWorld();
+	auto end = std::chrono::high_resolution_clock::now();
+	auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+	std::ofstream myfile;
+  	myfile.open ("result.txt");
+  	myfile <<  elapsed.count() * 1e-9; 
+  	myfile.close();
 }
 int main(int argc, char *argv[]){
 	//set coordinates and dimensions of the canvas
@@ -508,6 +542,11 @@ int main(int argc, char *argv[]){
         if(argv[count]==std::string("o")){
               std::stringstream temp(argv[count+1]); 
               temp >> objects; 
+              //std::cout <<  objects<<" objects\n";    
+        }
+        if(argv[count]==std::string("a")){
+              std::stringstream temp(argv[count+1]); 
+              temp >> aliasing; 
               //std::cout <<  objects<<" objects\n";    
         }
         if(argv[count]==std::string("fm")){

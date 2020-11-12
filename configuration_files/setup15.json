@@ -1,0 +1,19 @@
+{
+	"resolution" :{
+				    "width": 1920,
+				    "height":1080
+					},
+	"camera":{
+				"from":[-10,20,0],
+				"to":[0,0,0],
+				"up":[0,10,0],
+				"fieldview":2
+	},
+	"shades": 1,
+	"reflect": 1,
+	"refract": 0,
+	"precision": 0,
+	"aliasing":0,
+	"neon": 0,
+	"objects": 100
+}

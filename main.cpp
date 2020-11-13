@@ -19,7 +19,7 @@
 #include "hitList.h"
 #include "matrix.h"
 #include "camera.h"
-#define EPSILON 0.01
+#define EPSILON 0.0001
 #define REMAIN 2
 
 int width,height,fieldview,objects;
@@ -38,10 +38,11 @@ struct Thread_Positions
      tuple * tuplelist;
 };
 float jitterMatrix[4 * 2] = {
-    -1.0/4.0,  3.0/4.0,
-     3.0/4.0,  1.0/3.0,
-    -3.0/4.0, -1.0/4.0,
-     1.0/4.0, -3.0/4.0,
+    -3.0/4.0,  -3.0/4.0,
+     3.0/4.0,  -3.0/4.0,
+    -3.0/4.0,   3.0/4.0,
+     3.0/4.0,   3.0/4.0,
+
 };
 
 float schlick(float & cos, const float& n1, const float& n2, const float& sin2_t ){
@@ -183,7 +184,7 @@ bool isPointShadow(const tuple& inputPoint){
 	for (it = 0; it <objects; it++){
 
 		returnedHitPoint=(sceneWorld.objectsInWorld[it])->ray_hits_me(r,nearHitPoint);
-		if(returnedHitPoint<nearHitPoint && (sceneWorld.objectsInWorld[it])->shapeMaterial.transparency==0){
+		if(returnedHitPoint<nearHitPoint && (sceneWorld.objectsInWorld[it])->shapeMaterial.transparency!=0){
 			objectPoistion=it;
 			nearHitPoint=returnedHitPoint;
 		}
@@ -435,9 +436,9 @@ void startWorld(){
 		float anglex= fmod(rand(), (M_PI*4));
 		float angley= fmod(rand(), (M_PI*4));
 		float anglez= fmod(rand(), (M_PI*4));
-		float scalex= fmod(rand(), 2)+0.1;//avoid scale (0,0,0)
-		float scaley= fmod(rand(), 2)+0.1;//avoid scale (0,0,0);
-		float scalez= fmod(rand(), 2)+0.1;//avoid scale (0,0,0);
+		float scalex= fmod(rand(), 1.99)+0.1;//avoid scale (0,0,0)
+		float scaley= fmod(rand(), 1.99)+0.1;//avoid scale (0,0,0);
+		float scalez= fmod(rand(), 1.99)+0.1;//avoid scale (0,0,0);
 		(sceneWorld.objectsInWorld[i])->shapeTransform=translation(tuple(randx,randy,randz,1))*
 														rotatex(anglex)*
 														rotatey(angley)*
@@ -459,13 +460,24 @@ void startWorld(){
 			case 1:
 			{
 				//objeto reflectivo
-				(sceneWorld.objectsInWorld[i])->set_material(tuple(randx,randy,randz,1),0.1,0.5,0.7,400.0,1,0,0);
+				if(reflections){
+					(sceneWorld.objectsInWorld[i])->set_material(tuple(randx/10,randy/10,randz/10,1),0.1,0,0,400.0,1,0,0);
+				}
+				else{
+				(sceneWorld.objectsInWorld[i])->set_material(tuple(randx,randy,randz,1),0.1,0.7,0.3,200.0,0.0,0,0);					
+				}
 				break;
 			}
 			case 2:
 			{
+				if(refractions){
+					(sceneWorld.objectsInWorld[i])->set_material(tuple(randx,randy,randz,1),0.01,0,0,400.0,0,1,1.1);
+				}
+				else{
+				(sceneWorld.objectsInWorld[i])->set_material(tuple(randx,randy,randz,1),0.1,0.7,0.3,200.0,0.0,0,0);								
+				}
 				//objeto transparente
-				(sceneWorld.objectsInWorld[i])->set_material(tuple(randx,randy,randz,1),0.1,0,0,400.0,0,0.9,1.1);
+
 				break;
 			}
 			default:
@@ -478,7 +490,7 @@ void startWorld(){
 	plane floor= plane(tuple(0,0,0,0));
 	floor.shapeTransform=translation(tuple(0,-21,0,1));
 	//reflective floor as deafult is added
-	floor.set_material(tuple(0,1,1,1),0.1,0.5,0.7,400.0,1,0,0);
+	floor.set_material(tuple(0,1,1,1),1,0.5,0.7,400.0,0,0,0);
 	floor.shapeTransform.invertMatrix();
 	floor.shapeTransform.InverseTranspose();
 	sceneWorld.addObject(&floor,i);

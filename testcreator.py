@@ -44,7 +44,7 @@ def runtest():
 													inputjson['refract'],
 													inputjson['precision'],
 													inputjson['neon'],
-													2,
+													inputjson['objects'],
 													inputjson['aliasing'],
 													inputjson['camera']['from'][0],
 													inputjson['camera']['from'][1],

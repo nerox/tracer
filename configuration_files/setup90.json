@@ -10,10 +10,10 @@
 				"fieldview":2
 	},
 	"shades": 0,
-	"reflect": 0,
+	"reflect": 1,
 	"refract": 0,
 	"precision": 0,
 	"aliasing":0,
 	"neon": 0,
-	"objects": 1000
+	"objects": 100
 }

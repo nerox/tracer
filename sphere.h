@@ -23,13 +23,11 @@ class sphere: public shape
 		float discriminant = b*b - 4.0*a*c;
 		float t1=(-b-sqrt(discriminant))/(2*a);
 		float t2=(-b+sqrt(discriminant))/(2*a);
-		//std::cout << t1 << "esfera \n";
-		//std::cout << t2 << "esfera \n";
-		if(discriminant >0){
-				if(t1>=0 && near_hit_point>t1){
+		if(discriminant >EPSILON2 && discriminant <EPSILON3){
+				if(t1>=EPSILON2 && near_hit_point>t1){
 					near_hit_point=t1;
 				}
-				if(t2>=0 && near_hit_point>t2){
+				if(t2>=EPSILON2 && near_hit_point>t2){
 					near_hit_point=t2;
 				}
 			}

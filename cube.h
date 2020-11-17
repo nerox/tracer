@@ -30,7 +30,7 @@ class cube: public shape
 		check_axis(transformRayOrigin.z(),transformRayDestination.z(),zt);
 		tmin=maximum(xt[0],yt[0],zt[0]);
 		tmax=minimum(xt[1],yt[1],zt[1]);
-		if (tmin< tmax && tmin>0 && tmax>0)
+		if (tmin< tmax && tmin>EPSILON2 && tmax>EPSILON2 )
 		{
 			
 			near_hit_point=tmin;

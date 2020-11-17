@@ -11,9 +11,9 @@
 	},
 	"shades": 1,
 	"reflect": 1,
-	"refract": 0,
+	"refract": 1,
 	"precision": 0,
 	"aliasing":1,
 	"neon": 0,
-	"objects": 1000
+	"objects": 100
 }

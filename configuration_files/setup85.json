@@ -15,5 +15,5 @@
 	"precision": 0,
 	"aliasing":0,
 	"neon": 0,
-	"objects": 100
+	"objects": 500
 }

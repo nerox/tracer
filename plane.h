@@ -20,7 +20,7 @@ class plane: public shape
 		//std::cout << transformRayDestination.y() << "\n";
 		if(abs(transformRayDestination.y())>EPSILON2){
 			float t=-transformRayOrigin.y()/transformRayDestination.y();
-			if(t>=0 && near_hit_point>t){
+			if(t>=EPSILON2 && near_hit_point>t){
 				near_hit_point=t;
 			}
 		}

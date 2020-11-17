@@ -43,14 +43,14 @@ class cone: public shape
 			else{
 				float t= -c/(2*b);	
 				float y0= transformRayOrigin.y()+t*transformRayDestination.y();
-				if(minimum<y0 && y0<maximum && t>=0 && t<near_hit_point){
+				if(minimum<y0 && y0<maximum && t>=EPSILON2 && t<near_hit_point){
 					near_hit_point=t;
 				}		
 			}	
 		}
 		else{
 			float disc= pow(b,2)-4*a*c;
-			if (disc<0){
+			if (disc<EPSILON2  || disc>EPSILON3){
 				return near_hit_point;
 			}
 			float t0= (-b-sqrt(disc))/(2*a);
@@ -59,11 +59,11 @@ class cone: public shape
 				std::swap(t0,t1);
 			}
 			float y0= transformRayOrigin.y()+t0*transformRayDestination.y();
-			if(minimum<y0 && y0<maximum && t0>=0 && t0<near_hit_point){
+			if(minimum<y0 && y0<maximum && t0>=EPSILON2 && t0<near_hit_point){
 				near_hit_point=t0;
 			}
 			float y1= transformRayOrigin.y()+t1*transformRayDestination.y();
-			if(minimum<y1 && y1<maximum && t1>=0 && t1<near_hit_point){
+			if(minimum<y1 && y1<maximum && t1>=EPSILON2 && t1<near_hit_point){
 				near_hit_point=t1;
 			}
 
@@ -74,14 +74,14 @@ class cone: public shape
 		tuple object_point=this->shapeTransform.mutiplyinverse(point); 
 		float dist= (pow(object_point.x(),2)+pow(object_point.z(),2));
 		tuple object_normal;
-		if(dist<1 and object_point.y()>=maximum-EPSILON2){
+		if(dist<1+EPSILON2 and object_point.y()>=maximum-EPSILON2){
 			object_normal=tuple(0,1,0,0);		}
-		else if(dist<1 and object_point.y()<=minimum+EPSILON2){
+		else if(dist<1+EPSILON2 and object_point.y()<=minimum+EPSILON2){
 			object_normal=tuple(0,-1,0,0);	
 		}
 		else{
 			float y = sqrt(pow(object_point.x(),2)+pow(object_point.z(),2));
-			if (object_point.y()>0){
+			if (object_point.y()>EPSILON2){
 				y=-y;
 			}
 			object_normal=tuple(object_point.x(),y,object_point.z(),0);
@@ -104,11 +104,11 @@ class cone: public shape
 		}
 		float t0=(minimum-origin.y())/direction.y();
 		//std::cout << t0<<" t3 \n";
-		if(check_cap(origin,direction,t0,minimum) && t0>=0 && t0<near_hit_point){
+		if(check_cap(origin,direction,t0,minimum) && t0>=EPSILON2 && t0<near_hit_point){
 			near_hit_point=t0;
 		}
 		float t1=(maximum-origin.y())/direction.y();
-		if(check_cap(origin,direction,t1,maximum) && t1>=0 && t1<near_hit_point){
+		if(check_cap(origin,direction,t1,maximum) && t1>=EPSILON2 && t1<near_hit_point){
 			near_hit_point=t1;
 		}
 		return near_hit_point;		

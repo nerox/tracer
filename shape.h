@@ -6,7 +6,9 @@
 #include "ray.h"
 #include <iostream>
 #include <list>
-#define EPSILON2 0.0001
+#define EPSILON2 0.0035
+#define EPSILON3 1000000
+
 
 class shape
 {

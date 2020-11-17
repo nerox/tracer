@@ -9,11 +9,11 @@
 				"up":[0,10,0],
 				"fieldview":2
 	},
-	"shades": 0,
-	"reflect": 0,
+	"shades": 1,
+	"reflect": 1,
 	"refract": 1,
 	"precision": 0,
-	"aliasing":1,
+	"aliasing":0,
 	"neon": 0,
-	"objects": 1000
+	"objects": 100
 }

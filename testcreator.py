@@ -10,7 +10,7 @@ def runtest():
 	for index in range(127):
 		inputjson=readjson(index)
 		os.system("rm -rf out.ppm")
-		os.system("g++ main.cpp -pthread -lm -o main")
+		os.system("g++ -o3 main.cpp -pthread -lm -o main")
 		command="./main h {} w {} fv {} sh {} rl {} rf {} pr {} v{} o {} a {} fm {} {} {} to {} {} {} up {} {} {} >> out.ppm".format(
 													inputjson['resolution']['height'],
 													inputjson['resolution']['width'],

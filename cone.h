@@ -74,14 +74,14 @@ class cone: public shape
 		tuple object_point=this->shapeTransform.mutiplyinverse(point); 
 		float dist= (pow(object_point.x(),2)+pow(object_point.z(),2));
 		tuple object_normal;
-		if(dist<1+EPSILON2 and object_point.y()>=maximum-EPSILON2){
+		if(dist<1 and object_point.y()>=maximum-EPSILON2){
 			object_normal=tuple(0,1,0,0);		}
-		else if(dist<1+EPSILON2 and object_point.y()<=minimum+EPSILON2){
+		else if(dist<1 and object_point.y()<=minimum+EPSILON2){
 			object_normal=tuple(0,-1,0,0);	
 		}
 		else{
 			float y = sqrt(pow(object_point.x(),2)+pow(object_point.z(),2));
-			if (object_point.y()>EPSILON2){
+			if (object_point.y()>0){
 				y=-y;
 			}
 			object_normal=tuple(object_point.x(),y,object_point.z(),0);

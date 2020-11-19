@@ -56,7 +56,7 @@ float schlick(float & cos, const float& n1, const float& n2, const float& sin2_t
 	float r_0= pow(((n1-n2)/(n1+n2)),2);
 	return r_0+(1-r_0)*pow((1-cos),5);
 }
-tuple color(const ray& r, int remain,std::list<shape*> *containers);
+tuple color(const ray& r, int remain,std::list<shape*> *containers,int originPostion);
 tuple lighting(const material& input_material, const light& input_light, const tuple& point,
 				const tuple& eyev, const tuple& normalv, const bool& isShadow, const float& transparency){
 	tuple effective_color= input_material.color*input_light.intensity;
@@ -112,7 +112,7 @@ ray rayforPixel(camera& inputCam, float px, float py){
 	tuple direction = unit_vector(pixel-origin);
 	return ray(origin,direction);
 }
-tuple reflectedworld(float& objectReflectance, tuple& reflectv,tuple& overPoint, int remain,std::list<shape*> *containers){
+tuple reflectedworld(float& objectReflectance, tuple& reflectv,tuple& overPoint, int remain,std::list<shape*> *containers, int originPostion){
 
 	if (objectReflectance==0 || remain<=0){
 		return tuple(0,0,0,1);
@@ -120,7 +120,7 @@ tuple reflectedworld(float& objectReflectance, tuple& reflectv,tuple& overPoint,
 	else{
 		ray reflect_ray(overPoint,reflectv);
 		tuple reflectColor;
-		reflectColor = color(reflect_ray, remain-1,containers); 
+		reflectColor = color(reflect_ray, remain-1,containers, originPostion); 
 
 		return reflectColor*objectReflectance;
 	}
@@ -160,15 +160,15 @@ void setRefractiveIndexes(std::list<shape*> *containers, float* n1, float* n2,  
 }
 tuple refractedworld(tuple& underPoint, tuple& normalv, tuple& eyev,
 					 float& transparency, float& nratio,
-					 float& sin2_t, float& cos_i,int remain, std::list<shape*> *containers){
+					 float& sin2_t, float& cos_i,int remain, std::list<shape*> *containers,int originPostion){
 	if(transparency==0 || remain<=0){
 		return tuple(0,0,0,1);
 	}
 	else{
 		float cos_t = sqrt(1.0-sin2_t);
 		tuple direction= normalv*(nratio*cos_i-cos_t)-eyev*nratio;
-		ray refactRay(underPoint,direction);
-		return color(refactRay,remain-1,containers)*transparency;
+		ray refactRay(underPoint,eyev);
+		return color(refactRay,remain-1,containers,originPostion)*transparency;
 	}
 }
 bool isPointShadow(const tuple& inputPoint, const int& sourcePosition){
@@ -204,27 +204,27 @@ bool isPointShadow(const tuple& inputPoint, const int& sourcePosition){
 
 }
 //TODO THIS SHOULD BE A WORLD FUNCTION
-tuple color(const ray& r, int remain,std::list<shape*> *containers){
+tuple color(const ray& r, int remain,std::list<shape*> *containers,int originPostion){
 	int it;
 	//TODO REMOVE REPLICATED CODE
 	float nearHitPoint = std::numeric_limits<float>::max(); //set to infinity
 	float returnedHitPoint;
 
-	int objectPoistion;
+	int objectPosition;
 	for (it = 0; it <objects; it++){
 		returnedHitPoint=(sceneWorld.objectsInWorld[it])->ray_hits_me(r,nearHitPoint);
-		if(returnedHitPoint<nearHitPoint){
-			objectPoistion=it;
+		if(returnedHitPoint<nearHitPoint &&  originPostion!=it){
+			objectPosition=it;
 			nearHitPoint=returnedHitPoint;
 		}
 		
 	}
 	if(nearHitPoint!=std::numeric_limits<float>::max()){
-		material nearHitPointMaterial= (sceneWorld.objectsInWorld[objectPoistion])->shapeMaterial;
+		material nearHitPointMaterial= (sceneWorld.objectsInWorld[objectPosition])->shapeMaterial;
 		tuple position=r.point_at_parameter(nearHitPoint);
 		tuple rdir=r.direction();
 		//Define surface normal
-		tuple normalv=(sceneWorld.objectsInWorld[objectPoistion])->normal_at(position);
+		tuple normalv=(sceneWorld.objectsInWorld[objectPosition])->normal_at(position);
 		//In case normal points away from eye vector
 		tuple eyev;
 		eyev=negate_tuple(rdir);
@@ -245,16 +245,16 @@ tuple color(const ray& r, int remain,std::list<shape*> *containers){
 		tuple under_point= position-(normalv*EPSILON);
 		float n1;
 		float n2;
-		setRefractiveIndexes(containers, &n1, &n2, (sceneWorld.objectsInWorld[objectPoistion]));
+		setRefractiveIndexes(containers, &n1, &n2, (sceneWorld.objectsInWorld[objectPosition]));
 		float nratio=n1/n2;
-		float cos_i=dot(eyev,normalv);
+		float cos_i=dot(rdir,normalv);
 		float sin2_t=pow(nratio,2)*(1-pow(cos_i,2));
 
 		/*End Comps*/
 		/*Shade Hit function*/
 		bool isShadow=false;
 		if (shadows){
-			isShadow=isPointShadow(position,objectPoistion);
+			isShadow=isPointShadow(position,objectPosition);
 		}
 		tuple color= lighting(nearHitPointMaterial, sceneWorld.sourceLight,over_point,eyev, normalv,isShadow,nearHitPointMaterial.transparency);
 		/*std::cout << color.x() << " " << color.y() << " " << color.z() << " color \n";
@@ -263,15 +263,15 @@ tuple color(const ray& r, int remain,std::list<shape*> *containers){
 
 		tuple refractedColor;
 		if(refractions){
-			refractedColor=refractedworld(under_point, normalv,eyev,nearHitPointMaterial.transparency,
-											nratio,sin2_t,cos_i, remain,containers);
+			refractedColor=refractedworld(position, normalv,rdir,nearHitPointMaterial.transparency,
+											nratio,sin2_t,cos_i, remain,containers,objectPosition);
 		}
 		else{
 			refractedColor=tuple(0,0,0,0);
 		}
 		tuple reflectedColor;
 		if(reflections){
-			reflectedColor=reflectedworld( nearHitPointMaterial.reflective, reflectv, over_point,remain, containers);
+			reflectedColor=reflectedworld( nearHitPointMaterial.reflective, reflectv, position,remain, containers,objectPosition);
 		}
 		else{
 			reflectedColor=tuple(0,0,0,0);
@@ -325,7 +325,7 @@ void *thread_renderWorld(void *arg)
 				float x = (i + jitterMatrix[2*sample]);
 				float y = (j + jitterMatrix[2*sample+1]);
 				r= rayforPixel(worldCamera, x, y);
-				tuple out = color(r,REMAIN, &containers);
+				tuple out = color(r,REMAIN, &containers,-1);
 				col = col+out;
 				}
 
@@ -334,7 +334,7 @@ void *thread_renderWorld(void *arg)
 			}
 			else{
 				r= rayforPixel(worldCamera, i, j);
-				col = color(r,REMAIN, &containers);
+				col = color(r,REMAIN, &containers,-1);
 			}
 			localp->tuplelist[pos]=col;
 			pos++;
@@ -383,7 +383,7 @@ void renderWorld(){
 void startWorld(){
 		//CREATE camera
 	// with fieldview of pi/2
-	srand((unsigned int)time(NULL));
+	//srand((unsigned int)time(NULL));
 	std::cout << "P3\n" << width << " "<< height << "\n255\n";
 	worldCamera.setCamera(width,height,M_PI/fieldview);
 	tuple from_t(from[0],from[1],from[2],1);
@@ -395,7 +395,7 @@ void startWorld(){
 	sceneWorld.createWorldList(objects);
 	int i;
 	for(i=0;i<objects-1;i++){
-		int randnum= (rand()% 4);
+		int randnum= 0;
 		switch (randnum)
 		{
 		case 0:
@@ -443,8 +443,8 @@ void startWorld(){
 														rotatex(anglex)*
 														rotatey(angley)*
 														rotatez(anglez)*
-														scale(tuple(scalex,scaley,scalez,0));
-		randnum= rand()% 4;
+														scale(tuple(1,1,1,0));
+		randnum= 1;
 		randx= (rand()% 1000)/1000.0;
 		randy= (rand()% 1000)/1000.0;
 		randz= (rand()% 1000)/1000.0;
@@ -488,9 +488,9 @@ void startWorld(){
 	}
 	//TODO create a general way of creating the scene for testing
 	plane floor= plane(tuple(0,0,0,0));
-	floor.shapeTransform=translation(tuple(0,-21,0,1));
+	floor.shapeTransform=translation(tuple(0,8,0,1));
 	//reflective floor as deafult is added
-	floor.set_material(tuple(0,1,1,1),0.1,0.7,0.3,400.0,0.0,0,0);
+	floor.set_material(tuple(0,0,0,1),0,0.7,0,0,0,1,1);
 	floor.shapeTransform.invertMatrix();
 	floor.shapeTransform.InverseTranspose();
 	sceneWorld.addObject(&floor,i);

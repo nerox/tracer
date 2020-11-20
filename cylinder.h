@@ -39,7 +39,7 @@ class cylinder: public shape
 				  2*transformRayOrigin.z()*transformRayDestination.z();
 		float c= pow(transformRayOrigin.x(),2)+pow(transformRayOrigin.z(),2)-1;
 		float disc= pow(b,2)-4*a*c;
-		if (disc<EPSILON2 || disc>=EPSILON3){
+		if (disc<EPSILON2){
 			return near_hit_point;
 		}
 		float t0= (-b-sqrt(disc))/(2*a);
@@ -79,7 +79,7 @@ class cylinder: public shape
 	bool check_cap(const tuple& origin, const tuple& direction, float& t){
 		float x = origin.x()+t*direction.x();
 		float z = origin.z()+t*direction.z();
-		return (pow(x,2)+pow(z,2))<= 1+EPSILON2;
+		return (pow(x,2)+pow(z,2))<= 1;
 	}
 	float intersect_caps(const tuple& origin, const tuple& direction,float& near_hit_point){
 		if(closed==false || abs(direction.y())<EPSILON2){

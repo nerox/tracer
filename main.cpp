@@ -158,7 +158,7 @@ void setRefractiveIndexes(std::list<shape*> *containers, float* n1, float* n2,  
 	//std::cout << *n1 << " " << *n2  << "\n";
 
 }
-tuple refractedworld(tuple& underPoint, tuple& normalv, tuple& eyev,
+tuple refractedworld(tuple& underPoint, tuple normalv, tuple eyev,
 					 float& transparency, float& nratio,
 					 float& sin2_t, float& cos_i,int remain, std::list<shape*> *containers,int originPostion){
 	if(transparency==0 || remain<=0){
@@ -166,8 +166,12 @@ tuple refractedworld(tuple& underPoint, tuple& normalv, tuple& eyev,
 	}
 	else{
 		float cos_t = sqrt(1.0-sin2_t);
-		tuple direction= normalv*(nratio*cos_i-cos_t)-eyev*nratio;
-		ray refactRay(underPoint,eyev);
+		tuple direction= normalv*(nratio*cos_i-cos_t)+eyev*nratio;
+		underPoint.e[3]=1;
+		direction.e[3]=0;
+		/*std::cout << direction.x() << " " << direction.y() << " " << direction.z() <<" "<< direction.e[3]<<"directin\n";
+		std::cout << eyev.x() << " " << eyev.y() << " " << eyev.z()<<" "<<eyev.e[3] << "eye\n";*/
+		ray refactRay(underPoint,direction);
 		return color(refactRay,remain-1,containers,originPostion)*transparency;
 	}
 }
@@ -241,13 +245,12 @@ tuple color(const ray& r, int remain,std::list<shape*> *containers,int originPos
 
 		}
 		tuple reflectv= reflect(rdir,normalv);
-		tuple over_point= position+(normalv*EPSILON);
 		tuple under_point= position-(normalv*EPSILON);
 		float n1;
 		float n2;
 		setRefractiveIndexes(containers, &n1, &n2, (sceneWorld.objectsInWorld[objectPosition]));
 		float nratio=n1/n2;
-		float cos_i=dot(rdir,normalv);
+		float cos_i=dot(eyev,normalv);
 		float sin2_t=pow(nratio,2)*(1-pow(cos_i,2));
 
 		/*End Comps*/
@@ -256,15 +259,15 @@ tuple color(const ray& r, int remain,std::list<shape*> *containers,int originPos
 		if (shadows){
 			isShadow=isPointShadow(position,objectPosition);
 		}
-		tuple color= lighting(nearHitPointMaterial, sceneWorld.sourceLight,over_point,eyev, normalv,isShadow,nearHitPointMaterial.transparency);
+		tuple color= lighting(nearHitPointMaterial, sceneWorld.sourceLight,position,eyev, normalv,isShadow,nearHitPointMaterial.transparency);
 		/*std::cout << color.x() << " " << color.y() << " " << color.z() << " color \n";
 		std::cout << reflectv.x() << " " << reflectv.y() << " " << reflectv.z() << " reflectv \n";
 		std::cout << over_point.x() << " " << over_point.y() << " " << over_point.z() << " over_point \n";*/
 
 		tuple refractedColor;
 		if(refractions){
-			refractedColor=refractedworld(position, normalv,rdir,nearHitPointMaterial.transparency,
-											nratio,sin2_t,cos_i, remain,containers,objectPosition);
+			refractedColor=refractedworld(under_point, normalv,rdir,nearHitPointMaterial.transparency,
+											nratio,sin2_t,cos_i, remain,containers,-1);
 		}
 		else{
 			refractedColor=tuple(0,0,0,0);
@@ -347,7 +350,7 @@ void renderWorld(){
     pthread_t *ptr;
     Thread_Positions *pthreadinfo;
     int i=0;
-    int threads_to_spawn= get_nprocs_conf();
+    int threads_to_spawn=1;
     ptr = (pthread_t*)malloc(threads_to_spawn*sizeof(pthread_t));
     pthreadinfo = (Thread_Positions*)malloc(threads_to_spawn*sizeof(Thread_Positions));
     int chunk = (width*height)/threads_to_spawn;
@@ -383,7 +386,7 @@ void renderWorld(){
 void startWorld(){
 		//CREATE camera
 	// with fieldview of pi/2
-	//srand((unsigned int)time(NULL));
+	srand((unsigned int)time(NULL));
 	std::cout << "P3\n" << width << " "<< height << "\n255\n";
 	worldCamera.setCamera(width,height,M_PI/fieldview);
 	tuple from_t(from[0],from[1],from[2],1);
@@ -395,7 +398,7 @@ void startWorld(){
 	sceneWorld.createWorldList(objects);
 	int i;
 	for(i=0;i<objects-1;i++){
-		int randnum= 0;
+		int randnum= rand()%4;
 		switch (randnum)
 		{
 		case 0:
@@ -414,7 +417,7 @@ void startWorld(){
 		case 2:
 		{
 			int faceOn= (rand()% 2);
-			cylinder *newShape= new cylinder(tuple(0,0,0,0),0,2,faceOn);
+			cylinder *newShape= new cylinder(tuple(0,0,0,0),0,2,1);
 			sceneWorld.addObject(newShape,i);
 			break;
 		}
@@ -444,7 +447,7 @@ void startWorld(){
 														rotatey(angley)*
 														rotatez(anglez)*
 														scale(tuple(1,1,1,0));
-		randnum= 1;
+		randnum= rand()%4;
 		randx= (rand()% 1000)/1000.0;
 		randy= (rand()% 1000)/1000.0;
 		randz= (rand()% 1000)/1000.0;
@@ -471,7 +474,7 @@ void startWorld(){
 			case 2:
 			{
 				if(refractions){
-					(sceneWorld.objectsInWorld[i])->set_material(tuple(randx,randy,randz,1),0,0.7,0,0,0,1,1.1);
+					(sceneWorld.objectsInWorld[i])->set_material(tuple(0,0,0,1),0,0.7,0,0,0,1,1.1);
 				}
 				else{
 				(sceneWorld.objectsInWorld[i])->set_material(tuple(randx,randy,randz,1),0.1,0.7,0.3,200.0,0.0,0,0);								
@@ -488,9 +491,9 @@ void startWorld(){
 	}
 	//TODO create a general way of creating the scene for testing
 	plane floor= plane(tuple(0,0,0,0));
-	floor.shapeTransform=translation(tuple(0,8,0,1));
+	floor.shapeTransform=translation(tuple(0,-21,0,1));
 	//reflective floor as deafult is added
-	floor.set_material(tuple(0,0,0,1),0,0.7,0,0,0,1,1);
+	floor.set_material(tuple(0,1,1,1),0.1,0.7,0.3,200.0,0.0,0,0);
 	floor.shapeTransform.invertMatrix();
 	floor.shapeTransform.InverseTranspose();
 	sceneWorld.addObject(&floor,i);

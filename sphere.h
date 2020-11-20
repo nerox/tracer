@@ -23,7 +23,7 @@ class sphere: public shape
 		float discriminant = b*b - 4.0*a*c;
 		float t1=(-b-sqrt(discriminant))/(2*a);
 		float t2=(-b+sqrt(discriminant))/(2*a);
-		if(discriminant >EPSILON2 ){
+		if(discriminant >0 ){
 				if(t1>=EPSILON2 && near_hit_point>t1){
 					near_hit_point=t1;
 				}

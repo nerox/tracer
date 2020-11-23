@@ -350,7 +350,7 @@ void renderWorld(){
     pthread_t *ptr;
     Thread_Positions *pthreadinfo;
     int i=0;
-    int threads_to_spawn=1;
+    int threads_to_spawn=get_nprocs_conf();
     ptr = (pthread_t*)malloc(threads_to_spawn*sizeof(pthread_t));
     pthreadinfo = (Thread_Positions*)malloc(threads_to_spawn*sizeof(Thread_Positions));
     int chunk = (width*height)/threads_to_spawn;
@@ -386,7 +386,7 @@ void renderWorld(){
 void startWorld(){
 		//CREATE camera
 	// with fieldview of pi/2
-	srand((unsigned int)time(NULL));
+	//srand((unsigned int)time(NULL));
 	std::cout << "P3\n" << width << " "<< height << "\n255\n";
 	worldCamera.setCamera(width,height,M_PI/fieldview);
 	tuple from_t(from[0],from[1],from[2],1);
@@ -434,7 +434,7 @@ void startWorld(){
 		int negy = (rand()% 2) ? -1: 1;
 		int negz = (rand()% 2) ? -1: 1;
 		float randx= (rand()% 20)*negx;
-		float randy= (rand()% 10)*negy;
+		float randy= (rand()% 10)*negy-5;
 		float randz= (rand()% 20)*negz;
 		float anglex= fmod(rand(), (M_PI*4));
 		float angley= fmod(rand(), (M_PI*4));
@@ -447,7 +447,7 @@ void startWorld(){
 														rotatey(angley)*
 														rotatez(anglez)*
 														scale(tuple(1,1,1,0));
-		randnum= rand()%4;
+		randnum= rand()%3;
 		randx= (rand()% 1000)/1000.0;
 		randy= (rand()% 1000)/1000.0;
 		randz= (rand()% 1000)/1000.0;
@@ -457,7 +457,7 @@ void startWorld(){
 			{
 				//objeto opaco
 
-				(sceneWorld.objectsInWorld[i])->set_material(tuple(randx,randy,randz,1),0.1,0.7,0.3,200.0,0.0,0,0);
+				(sceneWorld.objectsInWorld[i])->set_material(tuple(randx,randy,randz,1),0.1,0.7,0.3,400.0,0.0,0,0);
 				break;
 			}
 			case 1:
@@ -474,7 +474,7 @@ void startWorld(){
 			case 2:
 			{
 				if(refractions){
-					(sceneWorld.objectsInWorld[i])->set_material(tuple(0,0,0,1),0,0.7,0,0,0,1,1.1);
+					(sceneWorld.objectsInWorld[i])->set_material(tuple(0,0,0,1),0.05,0.7,0.3,200.0,0.0,1,1.05);
 				}
 				else{
 				(sceneWorld.objectsInWorld[i])->set_material(tuple(randx,randy,randz,1),0.1,0.7,0.3,200.0,0.0,0,0);								
